@@ -1,89 +1,89 @@
-// 使用暴露在window.electronAPI上的安全IPC调用
+// Use secure IPC calls exposed on window.electronAPI
 
 /**
- * MCP 服务渲染进程接口
+ * MCP service renderer process interface
  */
 class MCPService {
   /**
-   * 获取所有MCP服务器
-   * @returns {Promise<Array>} MCP服务器列表
+   * Get all MCP servers
+   * @returns {Promise<Array>} MCP server list
    */
   async getAllServers() {
     try {
-      // 直接调用mcp-ipc处理
+      // Call mcp-ipc handling directly
       return window.electronAPI.invokeMCP("get-all-mcp-servers");
     } catch (error) {
-      console.error("获取MCP服务器列表失败:", error);
+      console.error("Failed to get MCP server list:", error);
       return [];
     }
   }
 
   /**
-   * 获取所有激活的MCP服务器
-   * @returns {Promise<Array>} 激活的MCP服务器列表
+   * Get all active MCP servers
+   * @returns {Promise<Array>} Active MCP server list
    */
   async getActiveServers() {
     try {
       return window.electronAPI.invokeMCP("get-active-mcp-servers");
     } catch (error) {
-      console.error("获取激活的MCP服务器列表失败:", error);
+      console.error("Failed to get active MCP server list:", error);
       return [];
     }
   }
 
   /**
-   * 添加MCP服务器
-   * @param {Object} serverData 服务器数据
-   * @returns {Promise<Object>} 新添加的服务器
+   * Add MCP server
+   * @param {Object} serverData Server data
+   * @returns {Promise<Object>} Newly added server
    */
   async addServer(serverData) {
     return window.electronAPI.invokeMCP("add-mcp-server", serverData);
   }
 
   /**
-   * 更新MCP服务器
-   * @param {string} id 服务器ID
-   * @param {Object} updates 更新数据
-   * @returns {Promise<Object>} 更新后的服务器
+   * Update MCP server
+   * @param {string} id Server ID
+   * @param {Object} updates Update data
+   * @returns {Promise<Object>} Updated server
    */
   async updateServer(id, updates) {
     return window.electronAPI.invokeMCP("update-mcp-server", id, updates);
   }
 
   /**
-   * 删除MCP服务器
-   * @param {string} id 服务器ID
-   * @returns {Promise<boolean>} 是否成功
+   * Delete MCP server
+   * @param {string} id Server ID
+   * @returns {Promise<boolean>} Whether successful
    */
   async deleteServer(id) {
     return window.electronAPI.invokeMCP("delete-mcp-server", id);
   }
 
   /**
-   * 设置MCP服务器激活状态
-   * @param {string} id 服务器ID
-   * @param {boolean} active 激活状态
-   * @returns {Promise<Object>} 更新后的服务器
+   * Set MCP server active status
+   * @param {string} id Server ID
+   * @param {boolean} active Active status
+   * @returns {Promise<Object>} Updated server
    */
   async setServerActive(id, active) {
     return window.electronAPI.invokeMCP("set-mcp-server-active", id, active);
   }
 
   /**
-   * 测试MCP服务器连接
-   * @param {Object} serverData 服务器数据
-   * @returns {Promise<Object>} 测试结果
+   * Test MCP server connection
+   * @param {Object} serverData Server data
+   * @returns {Promise<Object>} Test result
    */
   async testConnection(serverData) {
     return window.electronAPI.invokeMCP("test-mcp-connection", serverData);
   }
 
   /**
-   * 执行MCP工具
-   * @param {string} serverId 服务器ID
-   * @param {string} toolId 工具ID
-   * @param {Object} parameters 参数
-   * @returns {Promise<Object>} 执行结果
+   * Execute MCP tool
+   * @param {string} serverId Server ID
+   * @param {string} toolId Tool ID
+   * @param {Object} parameters Parameters
+   * @returns {Promise<Object>} Execution result
    */
   async executeTool(serverId, toolId, parameters) {
     return window.electronAPI.invokeMCP(
@@ -95,15 +95,15 @@ class MCPService {
   }
 
   /**
-   * 获取所有激活服务器的工具
-   * @returns {Promise<Array>} 工具列表，包含服务器信息
+   * Get all tools from active servers
+   * @returns {Promise<Array>} Tool list with server information
    */
   async getAllActiveTools() {
     try {
       const servers = await this.getActiveServers();
       const tools = [];
 
-      // 收集所有激活服务器的工具
+      // Collect tools from all active servers
       for (const server of servers) {
         if (server.tools && server.tools.length > 0) {
           server.tools.forEach((tool) => {
@@ -119,17 +119,17 @@ class MCPService {
 
       return tools;
     } catch (error) {
-      console.error("获取所有激活工具失败:", error);
+      console.error("Failed to get all active tools:", error);
       return [];
     }
   }
 
   /**
-   * 调用MCP工具
-   * @param {string} serverId 服务器ID
-   * @param {string} toolId 工具ID
-   * @param {Object} parameters 执行参数
-   * @returns {Promise<Object>} 执行结果
+   * Call MCP tool
+   * @param {string} serverId Server ID
+   * @param {string} toolId Tool ID
+   * @param {Object} parameters Execution parameters
+   * @returns {Promise<Object>} Execution result
    */
   async callTool(serverId, toolId, parameters) {
     return window.electronAPI.invokeMCP(

@@ -10,9 +10,9 @@
   display: flex;
   flex-direction: column;
   height: 100vh;
-  /* 使用视口高度 */
+  /* Use viewport height */
   overflow: hidden;
-  /* 防止出现双滚动条 */
+  /* Prevent double scrollbars */
 }
 
 .chat-header {
@@ -54,9 +54,9 @@
   padding: 16px;
   background-color: #fff;
   height: calc(100vh - 140px);
-  /* 减去头部和输入框的高度 */
+  /* Subtract header and input height */
   overflow-scrolling: touch;
-  /* 改善移动设备上的滚动 */
+  /* Improve scrolling on mobile devices */
   -webkit-overflow-scrolling: touch;
 }
 
@@ -83,23 +83,23 @@
   transition: all 0.3s ease;
   padding: 0 4px;
   max-width: 90%;
-  /* 限制消息宽度 */
+  /* Limit message width */
 }
 
-/* 用户消息靠右对齐 */
+/* User messages align right */
 .user-message {
   flex-direction: row-reverse;
   margin-left: auto;
-  /* 使用户消息靠右 */
+  /* Make user messages align right */
 }
 
-/* AI消息靠左对齐 */
+/* AI messages align left */
 .ai-message {
   margin-right: auto;
-  /* 使AI消息靠左 */
+  /* Make AI messages align left */
 }
 
-/* 移除悬停时的上浮效果 */
+  /* Remove hover floating effect */
 .message-item:hover {
   /* transform: translateY(-2px); */
 }
@@ -109,7 +109,7 @@
   flex-shrink: 0;
 }
 
-/* 用户消息头像在右侧，需要调整margin */
+/* User message avatar on right, adjust margin */
 .user-message .message-avatar {
   margin-right: 0;
   margin-left: 12px;
@@ -135,14 +135,14 @@
 
 .ai-avatar::before {
   display: none;
-  /* 移除之前的背景效果 */
+  /* Remove previous background effect */
 }
 
 .ai-avatar img {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  /* 使用cover可以填充整个区域，但会裁剪超出部分 */
+  /* Use cover to fill area, but will crop overflow */
   background-color: #ffffff;
 }
 
@@ -167,7 +167,7 @@
   position: relative;
 }
 
-/* 用户消息气泡样式 */
+/* User message bubble style */
 .user-message .message-content {
   background-color: #e3f2fd;
   border-radius: 16px 16px 4px 16px;
@@ -178,7 +178,7 @@
   box-shadow: 0 1px 2px rgba(24, 144, 255, 0.1);
 }
 
-/* AI消息气泡样式 */
+/* AI message bubble style */
 .ai-message .message-content {
   background-color: #f0f7ff;
   border-radius: 4px 16px 16px 16px;
@@ -193,7 +193,7 @@
   flex-wrap: wrap;
 }
 
-/* 用户消息头部右对齐 */
+/* User message header align right */
 .user-message .message-header {
   flex-direction: row-reverse;
 }
@@ -205,7 +205,7 @@
   color: #333;
 }
 
-/* 用户消息发送者名称右对齐 */
+/* User message sender name align right */
 .user-message .message-sender {
   margin-right: 0;
   margin-left: 8px;
@@ -235,7 +235,7 @@
   margin-left: auto;
 }
 
-/* 用户消息时间左对齐 */
+/* User message time align left */
 .user-message .message-time {
   margin-left: 0;
   margin-right: auto;
@@ -261,7 +261,7 @@
   border: 1px solid rgba(0, 0, 0, 0.1);
 }
 
-/* 语法高亮相关样式 */
+/* Syntax highlighting related styles */
 .message-text pre > div {
   margin: 0 !important;
   padding: 0 !important;
@@ -363,7 +363,7 @@
   resize: none;
   padding: 14px 18px;
   padding-right: 110px;
-  /* 为按钮留出空间 */
+  /* Leave space for button */
   border-radius: 12px;
   min-height: 96px !important;
   font-size: 15px;
@@ -457,7 +457,7 @@
   min-width: 180px;
 }
 
-/* 添加新的消息内容块样式 */
+/* Add new message content block styles */
 .message-content-blocks {
   display: flex;
   flex-direction: column;
@@ -583,7 +583,7 @@
   color: #666666;
 }
 
-/* 流式显示效果 */
+/* Stream display effect */
 @keyframes typing {
   from {
     width: 0;
@@ -594,7 +594,7 @@
   }
 }
 
-/* 全局加载状态指示器 */
+/* Global loading indicator */
 .global-loading-indicator {
   position: fixed;
   top: 20px;
@@ -621,7 +621,7 @@
   }
 }
 
-/* 复制按钮样式 */
+/* Copy button styles */
 .copy-button {
   color: #8c8c8c;
   background: transparent;
@@ -642,7 +642,7 @@
   opacity: 1;
 }
 
-/* 消息底部样式 */
+/* Message footer styles */
 .message-footer {
   display: flex;
   justify-content: flex-end;
@@ -659,7 +659,7 @@
   opacity: 1;
 }
 
-/* 头部操作区域样式 */
+/* Header action area styles */
 .chat-actions {
   display: flex;
   align-items: center;
@@ -683,18 +683,18 @@
   transform: translateY(-1px);
 }
 
-/* 调整消息文本对齐方式 */
+/* Adjust message text alignment */
 .user-message .message-text {
   text-align: left;
 }
 
-/* 代码块包装器 */
+/* Code block wrapper */
 .code-block-wrapper {
   position: relative;
   margin: 10px 0;
 }
 
-/* 代码块头部 */
+/* Code block header */
 .code-block-header {
   background-color: #2d2d2d;
   color: #d4d4d4;
@@ -710,14 +710,14 @@
   border-bottom: 1px solid #3e3e3e;
 }
 
-/* 代码语言标签 */
+/* Code language tag */
 .code-language {
   text-transform: uppercase;
   font-weight: 600;
   color: #c2c2c2;
 }
 
-/* 复制按钮 */
+/* Copy button */
 .code-copy-button {
   color: #c2c2c2;
   background: transparent;
@@ -737,7 +737,7 @@
   background-color: rgba(255, 255, 255, 0.1);
 }
 
-/* 调整代码高亮区域的边框半径 */
+/* Adjust code highlight area border radius */
 .code-block-wrapper pre {
   margin: 0 !important;
   border-top-left-radius: 0 !important;
@@ -757,7 +757,7 @@
   border: 1px solid rgba(0, 0, 0, 0.1);
 }
 
-/* MCP工具调用组件样式 */
+/* MCP tool call component styles */
 .mcp-tool-call {
   margin: 10px 0;
   border: 1px solid #e6e6e6;
@@ -809,7 +809,7 @@
   color: #1890ff;
 }
 
-/* 工具调用中状态信息 */
+/* Tool calling status info */
 .tool-calling-status {
   background-color: #e6f7ff;
   border: 1px solid #91d5ff;
@@ -822,7 +822,7 @@
   color: #1890ff;
 }
 
-/* 消息渐入动画 */
+/* Message fade-in animation */
 @keyframes messageAppear {
   from {
     opacity: 0;
@@ -838,7 +838,7 @@
   animation: messageAppear 0.3s ease-out;
 }
 
-/* 空消息状态样式优化 */
+/* Empty message state style optimization */
 .empty-message-icon {
   margin-bottom: 15px;
   opacity: 0.6;
@@ -850,14 +850,14 @@
   opacity: 0.8;
 }
 
-/* 假设已有 .chat-input-container 相关样式 */
+/* Assuming .chat-input-container related styles exist */
 .chat-input-container .input-actions {
   display: flex;
   align-items: center;
   margin-top: 8px;
 }
 
-/* 确保发送按钮仍然在右侧 */
+/* Ensure send button remains on the right */
 .send-button,
 .stop-button {
   margin-left: auto;

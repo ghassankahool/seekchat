@@ -45,15 +45,15 @@ const { TextArea } = Input;
 const { Option, OptGroup } = Select;
 const { Panel } = Collapse;
 
-// 消息内容组件
+// Message content component
 const MessageContent = ({ content }) => {
   const { t } = useTranslation();
 
-  // 如果内容是字符串，尝试解析为 JSON
+  // If content is string, try to parse as JSON
   const parsedContent =
     typeof content === "string" ? parseMessageContent(content) : content;
 
-  // 复制代码到剪贴板
+  // Copy code to clipboard
   const copyCodeToClipboard = (code) => {
     navigator.clipboard
       .writeText(code)
@@ -61,23 +61,23 @@ const MessageContent = ({ content }) => {
         message.success(t("chat.codeCopied"));
       })
       .catch((error) => {
-        console.error("复制代码失败:", error);
+        console.error("Failed to copy code:", error);
         message.error(t("chat.copyToClipboard") + t("common.failed"));
       });
   };
 
-  // 处理链接点击事件，在外部浏览器中打开
+  // Handle link click events, open in external browser
   const handleLinkClick = (href, event) => {
     event.preventDefault();
 
-    // 使用electronAPI在浏览器中打开链接
+    // Use electronAPI to open link in browser
     window.electronAPI.openExternalURL(href).catch((err) => {
       console.error(t("about.openLinkFailed"), err);
       message.error(`${t("about.openLinkFailed")} ${err.message}`);
     });
   };
 
-  // 自定义渲染器，添加代码高亮功能
+  // Custom renderer, add code highlighting functionality
   const renderers = {
     code({ node, inline, className, children, ...props }) {
       const match = /language-(\w+)/.exec(className || "");
@@ -113,7 +113,7 @@ const MessageContent = ({ content }) => {
       );
     },
 
-    // 自定义链接渲染，设置为在外部浏览器打开
+    // Custom link rendering, set to open in external browser
     a({ node, href, children, ...props }) {
       return (
         <a
@@ -128,26 +128,26 @@ const MessageContent = ({ content }) => {
     },
   };
 
-  // 如果解析后是数组，渲染多个内容块
+  // If parsed result is array, render multiple content blocks
   if (Array.isArray(parsedContent)) {
-    // 找到主要内容（类型为 content）
+    // Find main content (type is content)
     const mainContent = parsedContent.find((item) => item.type === "content");
-    // 找到思考内容（类型为 reasoning_content）
+    // Find reasoning content (type is reasoning_content)
     const reasoningContent = parsedContent.find(
       (item) => item.type === "reasoning_content"
     );
-    // 找到工具调用内容（类型为 tool_calls）
+    // Find tool call content (type is tool_calls)
     const toolCallsContent = parsedContent.find(
       (item) => item.type === "tool_calls"
     );
     console.log("toolCallsContent:", toolCallsContent);
 
-    // 导入MCP工具调用组件
+    // Import MCP tool call component
     const MCPToolCall = lazy(() => import("./MCPToolCall"));
 
     return (
       <div className="message-content-blocks">
-        {/* 思考内容（可折叠） - 移到主要内容之前 */}
+        {/* Reasoning content (collapsible) - moved before main content */}
         {reasoningContent &&
           reasoningContent.content &&
           reasoningContent.content !== "" && (
@@ -179,7 +179,7 @@ const MessageContent = ({ content }) => {
               </Panel>
             </Collapse>
           )}
-        {/* 工具调用内容 */}
+        {/* Tool call content */}
         {toolCallsContent &&
           toolCallsContent.content &&
           Array.isArray(toolCallsContent.content) && (
@@ -200,7 +200,7 @@ const MessageContent = ({ content }) => {
               ))}
             </div>
           )}
-        {/* 主要内容 - 移到思考内容之后 */}
+        {/* Main content - moved after reasoning content */}
         {mainContent && mainContent.status !== "error" && (
           <div className="message-main-content">
             <ReactMarkdown components={renderers}>
@@ -214,12 +214,12 @@ const MessageContent = ({ content }) => {
           </div>
         )}
 
-        {/* 错误内容 */}
+        {/* Error content */}
         {mainContent && mainContent.status === "error" && (
           <div className="message-error-content">{mainContent.content}</div>
         )}
 
-        {/* 如果没有内容，显示加载中 */}
+        {/* If no content, show loading */}
         {!mainContent && !reasoningContent && !toolCallsContent && (
           <Spin size="small" />
         )}
@@ -227,7 +227,7 @@ const MessageContent = ({ content }) => {
     );
   }
 
-  // 如果不是数组，直接渲染内容
+  // If not an array, render content directly
   return (
     <ReactMarkdown components={renderers}>
       {typeof parsedContent === "string"
@@ -237,13 +237,13 @@ const MessageContent = ({ content }) => {
   );
 };
 
-// 直接在前端实现复制功能
+// Implement copy functionality directly in frontend
 const copyToClipboard = (content, t) => {
-  // 如果是字符串，尝试解析为JSON
+  // If it's a string, try to parse as JSON
   const parsedContent =
     typeof content === "string" ? parseMessageContent(content) : content;
 
-  // 找到主要内容
+  // Find main content
   let textToCopy = "";
   if (Array.isArray(parsedContent)) {
     const mainContent = parsedContent.find((item) => item.type === "content");
@@ -257,7 +257,7 @@ const copyToClipboard = (content, t) => {
         : formatMessageContent(parsedContent);
   }
 
-  // 复制到剪贴板
+  // Copy to clipboard
   try {
     navigator.clipboard.writeText(textToCopy);
     message.success(t("chat.copiedToClipboard"));
@@ -267,7 +267,7 @@ const copyToClipboard = (content, t) => {
       t("chat.copyToClipboard") + t("common.failed") + ":" + error.message
     );
 
-    // 回退方案：创建临时文本区域
+    // Fallback: create temporary textarea
     try {
       const textArea = document.createElement("textarea");
       textArea.value = textToCopy;
@@ -288,27 +288,27 @@ const copyToClipboard = (content, t) => {
   }
 };
 
-// 模型设置弹窗组件
+// Model settings modal component
 const ModelSettingsModal = ({ visible, onCancel, onSave, initialSettings }) => {
   const { t } = useTranslation();
   const [form] = Form.useForm();
   const [temperature, setTemperature] = useState(0.7);
   const [contextLength, setContextLength] = useState(10);
 
-  // 当弹窗打开时，设置表单的初始值
+  // When modal opens, set form initial values
   useEffect(() => {
     if (visible && initialSettings) {
-      // 设置默认值或使用会话中保存的值
+      // Set default values or use saved values from session
       const defaultSettings = { temperature: 0.7, contextLength: 10 };
       const settings = { ...defaultSettings, ...initialSettings };
 
       console.log("settings modal initial settings:", settings);
 
-      // 直接设置本地状态
+      // Set local state directly
       setTemperature(parseFloat(settings.temperature));
       setContextLength(settings.contextLength);
 
-      // 设置表单值
+      // Set form values
       form.setFieldsValue({
         temperature: parseFloat(settings.temperature),
         contextLength: settings.contextLength,
@@ -328,7 +328,7 @@ const ModelSettingsModal = ({ visible, onCancel, onSave, initialSettings }) => {
       });
   };
 
-  // 生成上下文长度选项
+  // Generate context length options
   const contextOptions = [
     { label: t("settings.unlimitedContext"), value: -1 },
     ...Array.from({ length: 20 }, (_, i) => ({
@@ -403,23 +403,23 @@ const ModelSettingsModal = ({ visible, onCancel, onSave, initialSettings }) => {
   );
 };
 
-// 获取服务提供商和模型信息
+// Get service provider and model information
 const getProviderAndModelInfo = (providerId, modelId) => {
-  // 获取所有供应商（包括系统和自定义供应商）
+  // Get all providers (including system and custom providers)
   const allProviders = getAllProviders();
 
-  // 查找提供商
+  // Find provider
   const provider = allProviders.find((p) => p.id === providerId);
   if (!provider)
     return {
-      providerName: "AI助手",
-      modelName: "未知模型",
+      providerName: "AI Assistant",
+      modelName: "Unknown Model",
       logo: null,
       providerId: "",
     };
 
-  // 查找模型
-  let modelName = "AI助手";
+  // Find model
+  let modelName = "AI Assistant";
   const allModels = provider.models || [];
   const model = allModels.find((m) => m.id === modelId);
 
@@ -435,7 +435,7 @@ const getProviderAndModelInfo = (providerId, modelId) => {
   };
 };
 
-// 使用 memo 包装 ChatWindow 组件
+// Wrap ChatWindow component with memo
 const ChatWindow = memo(({ session, onUpdateSession }) => {
   const { t } = useTranslation();
   const { config, saveConfig } = useUserConfig();
@@ -444,7 +444,7 @@ const ChatWindow = memo(({ session, onUpdateSession }) => {
   const electronAPI = window.electronAPI;
   const sessionIdRef = useRef(null);
 
-  // 跟踪可见消息ID，用于优化滚动和渲染
+  // Track visible message IDs for optimizing scrolling and rendering
   const [visibleMessageIds, setVisibleMessageIds] = useState({});
 
   const {
@@ -459,7 +459,7 @@ const ChatWindow = memo(({ session, onUpdateSession }) => {
     scrollToBottom,
   } = useMessages(session, sessionSettings);
 
-  // 当会话变化时加载设置
+  // Load settings when session changes
   useEffect(() => {
     const loadSessionSettings = async () => {
       if (!session) {
@@ -467,24 +467,24 @@ const ChatWindow = memo(({ session, onUpdateSession }) => {
         return;
       }
 
-      // 设置当前会话ID引用
+      // Set current session ID reference
       sessionIdRef.current = session.id;
 
-      // 从数据库获取最新的会话数据
+      // Get latest session data from database
       try {
-        // 获取最新的会话数据
+        // Get latest session data
         const sessions = await electronAPI.getSessions();
         const freshSession = sessions.find((s) => s.id === session.id);
 
         if (!freshSession) {
-          console.error(`找不到会话 ID: ${session.id}`);
+          console.error(`Session not found ID: ${session.id}`);
           setSessionSettings({ temperature: 0.7, contextLength: 10 });
           return;
         }
 
-        console.log("从数据库获取最新会话数据:", freshSession);
+        console.log("Get latest session data from database:", freshSession);
 
-        // 尝试从会话元数据加载设置
+        // Try to load settings from session metadata
         let metadata = {};
         if (freshSession.metadata) {
           metadata =
@@ -494,11 +494,11 @@ const ChatWindow = memo(({ session, onUpdateSession }) => {
         }
         console.log("session metadata:", metadata);
 
-        // 使用默认设置合并可能缺失的值
+        // Merge default settings with potentially missing values
         const defaultSettings = { temperature: 0.7, contextLength: 10 };
         const mergedSettings = { ...defaultSettings, ...metadata };
 
-        // 确保temperature是数字类型
+        // Ensure temperature is a number type
         if (mergedSettings.temperature !== undefined) {
           mergedSettings.temperature = parseFloat(mergedSettings.temperature);
         }
@@ -509,8 +509,8 @@ const ChatWindow = memo(({ session, onUpdateSession }) => {
         );
         setSessionSettings(mergedSettings);
       } catch (error) {
-        console.error("加载会话设置失败:", error);
-        // 使用默认设置
+        console.error("Failed to load session settings:", error);
+        // Use default settings
         setSessionSettings({ temperature: 0.7, contextLength: 10 });
       }
     };
@@ -518,18 +518,18 @@ const ChatWindow = memo(({ session, onUpdateSession }) => {
     loadSessionSettings();
   }, [session, electronAPI]);
 
-  // 监听消息列表变化，自动滚动到底部
+  // Listen to message list changes, auto scroll to bottom
   useEffect(() => {
     if (messages.length > 0 && !loading) {
-      // 使用requestAnimationFrame确保在下一次渲染周期执行滚动
+      // Use requestAnimationFrame to ensure scroll executes in next render cycle
       requestAnimationFrame(() => {
         scrollToBottom();
-        console.log("消息更新后自动滚动到底部");
+        console.log("Auto scroll to bottom after message update");
       });
     }
   }, [messages.length, loading, scrollToBottom]);
 
-  // 处理消息可见性变化
+  // Handle message visibility changes
   const handleMessageVisibilityChange = useCallback((messageId, isVisible) => {
     if (isVisible) {
       setVisibleMessageIds((prev) => ({ ...prev, [messageId]: true }));
@@ -542,12 +542,12 @@ const ChatWindow = memo(({ session, onUpdateSession }) => {
     }
   }, []);
 
-  // 保存会话设置
+  // Save session settings
   const saveSessionSettings = async (settings) => {
     if (!session) return;
 
     try {
-      // 确保温度值是数字类型，只保存温度和上下文消息数量
+      // Ensure temperature is a number type, only save temperature and context message count
       const processedSettings = {
         temperature: parseFloat(settings.temperature),
         contextLength: settings.contextLength,
@@ -556,7 +556,7 @@ const ChatWindow = memo(({ session, onUpdateSession }) => {
       console.log(`save session ${session.id} settings:`, processedSettings);
       await electronAPI.updateSessionMetadata(session.id, processedSettings);
 
-      // 保存后立即从数据库重新加载最新设置
+      // Immediately reload latest settings from database after saving
       const sessions = await electronAPI.getSessions();
       const freshSession = sessions.find((s) => s.id === session.id);
 
@@ -573,10 +573,10 @@ const ChatWindow = memo(({ session, onUpdateSession }) => {
           mergedSettings.temperature = parseFloat(mergedSettings.temperature);
         }
 
-        console.log(`重新加载会话设置:`, mergedSettings);
+        console.log(`Reload session settings:`, mergedSettings);
         setSessionSettings(mergedSettings);
       } else {
-        // 直接使用当前设置
+        // Use current settings directly
         setSessionSettings(processedSettings);
       }
 
@@ -587,15 +587,15 @@ const ChatWindow = memo(({ session, onUpdateSession }) => {
     }
   };
 
-  // 处理模型变更
+  // Handle model changes
   const handleModelChange = async (value) => {
     const [providerId, modelId] = value.split("|");
 
-    // 更新配置
+    // Update configuration
     const newConfig = { ...config, providerId, modelId };
     saveConfig(newConfig);
 
-    // 显示提示
+    // Show notification
     message.success(
       `${t("chat.modelChanged", {
         model: getModelName(providerId, modelId),
@@ -603,21 +603,21 @@ const ChatWindow = memo(({ session, onUpdateSession }) => {
     );
   };
 
-  // 获取所有启用的提供商及其模型
+  // Get all enabled providers and their models
   const getProviderModels = () => {
     const enabledProviders = getEnabledProviders();
 
     return enabledProviders
       .map((provider) => {
-        // 确保provider.models存在且是数组
+        // Ensure provider.models exists and is an array
         if (!provider.models || !Array.isArray(provider.models)) {
-          console.warn(`Provider ${provider.name} 没有有效的models数组`);
+          console.warn(`Provider ${provider.name} does not have a valid models array`);
           return { provider, models: [] };
         }
 
-        // 过滤出启用的且未删除的模型
+        // Filter out enabled and non-deleted models
         const enabledModels = provider.models.filter((model) => {
-          // 如果模型没有明确的enabled属性或者enabled为true，并且未被删除，则认为是可用的
+          // If model doesn't have explicit enabled property or enabled is true, and not deleted, consider it available
           return model.enabled !== false && model.deleted !== true;
         });
 
@@ -626,84 +626,84 @@ const ChatWindow = memo(({ session, onUpdateSession }) => {
           models: enabledModels,
         };
       })
-      .filter((item) => item.models.length > 0); // 只返回有启用模型的提供商
+      .filter((item) => item.models.length > 0); // Only return providers with enabled models
   };
   const providerModels = getProviderModels();
 
-  // 获取当前选择的模型
+  // Get currently selected model
   const getCurrentModel = () => {
-    // 首先检查配置中是否有providerId和modelId
+    // First check if configuration has providerId and modelId
     if (!config.providerId || !config.modelId) return null;
-    // 检查当前选择的提供商是否存在于可用提供商列表中
+    // Check if currently selected provider exists in available provider list
     const provider = providerModels.find(
       (item) => item.provider.id === config.providerId
     );
     if (!provider) return null;
 
-    // 检查当前选择的模型是否存在于可用模型列表中
+    // Check if currently selected model exists in available model list
     const modelExists = provider.models.some(
       (model) => model.id === config.modelId
     );
     if (!modelExists) return null;
 
-    // 只有当提供商和模型都存在且启用时，才返回完整的选择值
+    // Only return complete selection value when both provider and model exist and are enabled
     return `${config.providerId}|${config.modelId}`;
   };
 
-  // 检查当前选中的模型是否可用，如果不可用则选择第一个可用模型
+  // Check if currently selected model is available, if not available then select first available model
   useEffect(() => {
-    // 只有当没有可用模型时才返回
+    // Only return when no available models
     if (providerModels.length === 0) return;
 
-    // 如果用户没有选择模型或选择的模型/提供商不可用，自动选择一个默认模型
+    // If user hasn't selected a model or selected model/provider is unavailable, automatically select a default model
     if (!config.providerId || !config.modelId) {
-      // 当用户初始化没有选择模型时，自动选择第一个可用模型
+      // When user initialization has no selected model, automatically select first available model
       if (providerModels.length > 0 && providerModels[0].models.length > 0) {
         const firstProvider = providerModels[0];
         const firstModel = firstProvider.models[0];
         handleModelChange(`${firstProvider.provider.id}|${firstModel.id}`);
-        console.log(`初始化自动选择模型: ${firstModel.name}`);
+        console.log(`Initialization auto-selected model: ${firstModel.name}`);
       }
       return;
     }
 
-    // 检查当前选择的提供商是否存在于可用提供商列表中
+    // Check if currently selected provider exists in available provider list
     const provider = providerModels.find(
       (item) => item.provider.id === config.providerId
     );
 
-    // 如果提供商不存在或没有模型，选择第一个可用模型
+    // If provider doesn't exist or has no models, select first available model
     if (!provider) {
-      // 如果有可用的提供商和模型，选择第一个
+      // If there are available providers and models, select the first one
       if (providerModels.length > 0 && providerModels[0].models.length > 0) {
         const firstProvider = providerModels[0];
         const firstModel = firstProvider.models[0];
         handleModelChange(`${firstProvider.provider.id}|${firstModel.id}`);
-        console.log(`自动选择了第一个可用模型: ${firstModel.name}`);
+        console.log(`Auto-selected first available model: ${firstModel.name}`);
       }
       return;
     }
 
-    // 检查当前选择的模型是否存在于可用模型列表中
+    // Check if currently selected model exists in available model list
     const modelExists = provider.models.some(
       (model) => model.id === config.modelId
     );
 
-    // 如果模型不存在，选择该提供商的第一个可用模型
+    // If model doesn't exist, select provider's first available model
     if (!modelExists) {
       if (provider.models.length > 0) {
         const firstModel = provider.models[0];
         handleModelChange(`${provider.provider.id}|${firstModel.id}`);
-        console.log(`当前模型不可用，自动选择了: ${firstModel.name}`);
+        console.log(`Current model unavailable, auto-selected: ${firstModel.name}`);
       } else if (
         providerModels.length > 0 &&
         providerModels[0].models.length > 0
       ) {
-        // 如果该提供商没有可用模型，选择第一个可用的提供商的第一个模型
+        // If this provider has no available models, select first available provider's first model
         const firstProvider = providerModels[0];
         const firstModel = firstProvider.models[0];
         handleModelChange(`${firstProvider.provider.id}|${firstModel.id}`);
-        console.log(`自动选择了第一个可用模型: ${firstModel.name}`);
+        console.log(`Auto-selected first available model: ${firstModel.name}`);
       }
     }
   }, [config.providerId, config.modelId, providerModels, handleModelChange]);
@@ -779,7 +779,7 @@ const ChatWindow = memo(({ session, onUpdateSession }) => {
                 <div className="empty-message-text">{t("chat.noMessages")}</div>
               </div>
             )}
-            {/* 仍需保留引用元素但不使其可见 */}
+            {/* Still need to keep reference element but not make it visible */}
             <div
               ref={messagesEndRef}
               style={{ height: "1px", marginBottom: "20px" }}

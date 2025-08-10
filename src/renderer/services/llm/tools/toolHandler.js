@@ -1,21 +1,21 @@
 /**
- * 工具调用处理模块
- * 负责处理AI工具的调用和响应处理
+ * Tool call handling module
+ * Responsible for handling AI tool calls and response processing
  */
 
 import { safeJsonParse, parseMCPToolParams } from "../utils/common.js";
 import i18n from "../../../i18n/index.js";
 
 /**
- * 处理工具调用
- * @param {Object} toolCall 工具调用对象
- * @param {Array} mcpTools MCP工具列表
- * @param {Function} onProgress 进度回调函数
- * @returns {Promise<Object>} 工具调用结果
+ * Handle tool call
+ * @param {Object} toolCall Tool call object
+ * @param {Array} mcpTools MCP tool list
+ * @param {Function} onProgress Progress callback function
+ * @returns {Promise<Object>} Tool call result
  */
 export const handleToolCall = async (toolCall, mcpTools, onProgress) => {
   try {
-    // 从MCP工具列表中找到对应的工具
+    // Find the corresponding tool from MCP tool list
     const tool = mcpTools.find((t) => t.id === toolCall.function.name);
     if (!tool) {
       throw new Error(
@@ -23,25 +23,25 @@ export const handleToolCall = async (toolCall, mcpTools, onProgress) => {
       );
     }
 
-    // 解析参数
+    // Parse parameters
     let args;
     try {
       console.log("toolCall", toolCall);
-      // 检查并清理工具调用参数字符串
+      // Check and clean tool call parameter string
       let argsStr = toolCall.function.arguments || "{}";
 
-      // 使用增强的MCP工具参数解析函数
+      // Use enhanced MCP tool parameter parsing function
       args = parseMCPToolParams(argsStr);
-      console.log("工具参数解析成功:", args);
+      console.log("Tool parameter parsing successful:", args);
     } catch (e) {
-      console.error("解析工具参数失败:", e);
+      console.error("Failed to parse tool parameters:", e);
       return {
         success: false,
         message: i18n.t("error.toolParameterParseFailed"),
       };
     }
 
-    // 通知正在调用工具
+    // Notify that tool is being called
     if (onProgress) {
       onProgress({
         toolCallStatus: {
@@ -53,11 +53,11 @@ export const handleToolCall = async (toolCall, mcpTools, onProgress) => {
       });
     }
 
-    // 导入MCP服务
+    // Import MCP service
     const mcpService = (await import("../../mcpService.js")).default;
 
-    // 调用MCP工具
-    console.log(`调用MCP工具: ${tool.id}，参数:`, args);
+    // Call MCP tool
+    console.log(`Calling MCP tool: ${tool.id}, parameters:`, args);
     const result = await mcpService.callTool(tool.serverId, tool.id, args);
 
     if (!result.success) {
@@ -66,7 +66,7 @@ export const handleToolCall = async (toolCall, mcpTools, onProgress) => {
       );
     }
 
-    // 通知工具调用成功
+    // Notify tool call success
     if (onProgress) {
       onProgress({
         toolCallStatus: {
@@ -84,9 +84,9 @@ export const handleToolCall = async (toolCall, mcpTools, onProgress) => {
       result: result.result,
     };
   } catch (error) {
-    console.error("工具调用失败:", error);
+    console.error("Tool call failed:", error);
 
-    // 通知工具调用失败
+    // Notify tool call failure
     if (onProgress) {
       onProgress({
         toolCallStatus: {

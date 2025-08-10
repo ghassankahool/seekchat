@@ -1,27 +1,27 @@
 import React, { useState, useEffect } from "react";
 import { getAllProviders } from "../services/models";
-// 移除对 models.js 的导入，避免循环依赖
+// Remove import of models.js to avoid circular dependency
 // import { providers } from "../services/models";
 
-// 配置名称常量
+// Config name constants
 const userConfigName = "user_config";
 const providersConfigName = "providers_config";
 
-// 默认用户配置
+// Default user config
 const defaultUserConfig = {
-  theme: "light", // 默认主题
-  // language: "en", // 默认语言
-  // 其他默认配置...
+  theme: "light", // Default theme
+  // language: "en", // Default language
+  // Other default configs...
 };
 
 /**
- * 用户配置Hook，用于获取和管理用户配置
- * @returns {Object} 包含用户配置相关的状态和方法
+ * User config hook for getting and managing user config
+ * @returns {Object} Contains user config state and methods
  */
 export const useUserConfig = () => {
   const [config, setConfig] = useState(() => getUserConfig());
 
-  // 监听配置变化
+  // Listen for config changes
   useEffect(() => {
     const handleStorageChange = () => {
       setConfig(getUserConfig());
@@ -34,7 +34,7 @@ export const useUserConfig = () => {
     };
   }, []);
 
-  // 保存配置
+  // Save config
   const saveConfig = (newConfig) => {
     const success = saveUserConfig(newConfig);
     if (success) {
@@ -43,7 +43,7 @@ export const useUserConfig = () => {
     return success;
   };
 
-  // 更新语言设置
+  // Update language setting
   const updateLanguage = (language) => {
     const newConfig = { ...config, language };
     return saveConfig(newConfig);
@@ -66,7 +66,7 @@ export const useUserConfig = () => {
   };
 };
 
-// 获取本地存储的配置
+// Get config from localStorage
 export const getUserConfig = () => {
   try {
     const configStr = localStorage.getItem(userConfigName);
@@ -74,36 +74,36 @@ export const getUserConfig = () => {
       return JSON.parse(configStr);
     }
   } catch (error) {
-    console.error("获取用户配置失败:", error);
+  console.error("Failed to get user config:", error);
   }
   return { ...defaultUserConfig };
 };
 
-// 保存配置到本地存储
+// Save config to localStorage
 export const saveUserConfig = (config) => {
   try {
     localStorage.setItem(userConfigName, JSON.stringify(config));
     return true;
   } catch (error) {
-    console.error("保存用户配置失败:", error);
+  console.error("Failed to save user config:", error);
     return false;
   }
 };
 
-// 获取提供商配置
+// Get provider config
 export const getProvidersConfig = () => {
   try {
     const providersJson = localStorage.getItem(providersConfigName);
     if (!providersJson) {
-      console.log("localStorage中没有提供商配置，返回空对象");
+  console.log("No provider config in localStorage, returning empty object");
       return {};
     }
 
     const savedConfig = JSON.parse(providersJson);
 
-    // 检查savedConfig是否为数组，如果是则转换为对象
+  // Check if savedConfig is an array, convert to object if so
     if (Array.isArray(savedConfig)) {
-      // console.log('从localStorage读取的提供商配置是数组，转换为对象');
+  // console.log('Provider config from localStorage is array, converting to object');
       const configObj = {};
       savedConfig.forEach((provider) => {
         if (provider && provider.id) {
@@ -113,16 +113,16 @@ export const getProvidersConfig = () => {
       return configObj;
     }
 
-    // 如果是对象，直接返回
+  // If it's an object, return directly
     if (savedConfig && typeof savedConfig === "object") {
-      // console.log('从localStorage读取的提供商配置:', savedConfig);
+  // console.log('Provider config from localStorage:', savedConfig);
       return savedConfig;
     }
 
-    console.error("从localStorage读取的提供商配置格式不正确");
+  console.error("Provider config format from localStorage is incorrect");
     return {};
   } catch (error) {
-    console.error("解析提供商配置失败:", error);
+  console.error("Failed to parse provider config:", error);
     return {};
   }
 };
@@ -130,9 +130,9 @@ export const getProvidersConfig = () => {
 export const saveProviderConfig = (providersConfig) => {
   try {
     console.log("saveProviderConfig", providersConfig);
-    // 确保providersConfig是对象而不是数组
+  // Ensure providersConfig is object, not array
     if (Array.isArray(providersConfig)) {
-      console.error("providersConfig是数组，需要转换为对象");
+  console.error("providersConfig is array, needs to be converted to object");
       const configObj = {};
       providersConfig.forEach((provider) => {
         if (provider && provider.id) {
@@ -142,18 +142,18 @@ export const saveProviderConfig = (providersConfig) => {
       providersConfig = configObj;
     }
 
-    // 确保providersConfig是一个对象
+  // Ensure providersConfig is an object
     if (!providersConfig) {
       providersConfig = {};
     }
-    // 对比 providersConfig 和 getAllProviders，如果providersConfig中没有的字段，则添加
+  // Compare providersConfig and getAllProviders, add missing fields from getAllProviders
     const allProviders = getAllProviders();
     allProviders.forEach((provider) => {
       if (providersConfig[provider.id]) {
-        // 对比providersConfig[provider.id]和provider，如果providersConfig[provider.id]中没有的字段，则添加
+  // Compare providersConfig[provider.id] and provider, add missing fields if not present
         Object.keys(provider).forEach((key) => {
-          // 修改这里的判断逻辑，只有当providersConfig[provider.id][key]为undefined时才添加默认值
-          // 这样可以确保false值不会被默认值覆盖
+          // Only add default if providersConfig[provider.id][key] is undefined
+          // This ensures false values are not overwritten by defaults
           if (providersConfig[provider.id][key] === undefined) {
             providersConfig[provider.id][key] = provider[key];
           }
@@ -161,36 +161,36 @@ export const saveProviderConfig = (providersConfig) => {
       }
     });
 
-    // 确保每个provider都有models属性
+  // Ensure each provider has models property
     Object.keys(providersConfig).forEach((providerId) => {
       const provider = providersConfig[providerId];
       if (!provider.models) {
-        console.warn(`Provider ${providerId} 没有models属性，初始化为空数组`);
+  console.warn(`Provider ${providerId} has no models property, initializing as empty array`);
         provider.models = [];
       } else if (!Array.isArray(provider.models)) {
-        console.warn(`Provider ${providerId} 的models不是数组，重置为空数组`);
+  console.warn(`Provider ${providerId} models is not array, resetting to empty array`);
         provider.models = [];
       }
     });
 
-    // 保存到localStorage
+  // Save to localStorage
     const configJson = JSON.stringify(providersConfig);
     localStorage.setItem(providersConfigName, configJson);
-    console.log("保存提供商配置成功，数据大小:", configJson.length, "字节");
-    console.log("保存的数据:", providersConfig);
+  console.log("Provider config saved successfully, data size:", configJson.length, "bytes");
+  console.log("Saved data:", providersConfig);
 
     return true;
   } catch (error) {
-    console.error("保存提供商配置失败:", error);
+  console.error("Failed to save provider config:", error);
     return false;
   }
 };
 
 /**
- * 保存单个提供商的配置
- * @param {string} providerId 提供商ID
- * @param {Object} config 提供商配置
- * @returns {boolean} 是否保存成功
+ * Save config for a single provider
+ * @param {string} providerId Provider ID
+ * @param {Object} config Provider config
+ * @returns {boolean} Whether save was successful
  */
 export const saveProviderConfigById = (providerId, config) => {
   try {
@@ -198,47 +198,47 @@ export const saveProviderConfigById = (providerId, config) => {
     savedConfig[providerId] = config;
     return saveProviderConfig(savedConfig);
   } catch (error) {
-    console.error("保存提供商配置失败:", error);
+  console.error("Failed to save provider config:", error);
     return false;
   }
 };
 
-// 清除所有配置
+// Clear all config
 export const clearAllConfigInternal = () => {
   try {
-    // 清除用户配置
+  // Clear user config
     localStorage.removeItem(userConfigName);
 
-    // 清除提供商配置
+  // Clear provider config
     localStorage.removeItem(providersConfigName);
 
-    console.log("已清除所有配置");
+  console.log("All config cleared");
     return true;
   } catch (error) {
-    console.error("清除配置失败:", error);
+  console.error("Failed to clear config:", error);
     return false;
   }
 };
 
-// 初始化配置
+// Initialize config
 if (typeof window !== "undefined") {
   if (!localStorage.getItem(userConfigName)) {
     saveUserConfig(getUserConfig());
   }
 
-  // 初始化提供商配置
+  // Initialize provider config
   if (!localStorage.getItem(providersConfigName)) {
-    // 不再依赖 models.js 中的 providers
-    // 初始化为空对象，providers 将在应用启动时通过其他方式加载
+  // No longer depend on providers in models.js
+  // Initialize as empty object, providers will be loaded by other means at app startup
     localStorage.setItem(providersConfigName, "{}");
   } else {
-    // 检查现有配置中是否有enabled字段，如果没有则添加
+  // Check if existing config has enabled field, add if missing
     const existingConfig = JSON.parse(
       localStorage.getItem(providersConfigName)
     );
     let needsUpdate = false;
 
-    // 如果是数组形式
+  // If array format
     if (Array.isArray(existingConfig)) {
       const updatedConfig = existingConfig.map((provider) => {
         if (provider.enabled === undefined) {
@@ -255,7 +255,7 @@ if (typeof window !== "undefined") {
         );
       }
     }
-    // 如果是对象形式
+  // If object format
     else if (typeof existingConfig === "object") {
       const updatedConfig = { ...existingConfig };
       let needsUpdate = false;
@@ -278,31 +278,31 @@ if (typeof window !== "undefined") {
 }
 
 /**
- * 检查是否已配置 AI 提供商和模型
- * @returns {boolean} 是否已配置
+ * Check if AI provider and model are configured
+ * @returns {boolean} Whether configured
  */
 export function isAIConfigured() {
   const config = getUserConfig();
   const allProviders = getAllProviders();
-  console.log("检查AI配置:", { userConfig: config, allProviders });
-  // 检查是否选择了提供商和模型
+  console.log("Check AI config:", { userConfig: config, allProviders });
+  // Check if provider and model are selected
   if (!config.providerId || !config.modelId) {
-    console.log("未选择提供商或模型");
+  console.log("Provider or model not selected");
     return false;
   }
 
-  // 从allProviders 中检查服务商没有被禁用以及模型没有被禁用货真删除
+  // Check in allProviders that provider is not disabled and model is not disabled or deleted
   const provider = allProviders.find(
     (p) => p.id === config.providerId && p.enabled !== false
   );
-  console.log("检查AI配置:", { provider });
+  console.log("Check AI config:", { provider });
   if (!provider) {
     return false;
   }
   const model = provider.models.find(
     (m) => m.id === config.modelId && m.enabled !== false && m.deleted !== true
   );
-  console.log("检查AI配置:", { model });
+  console.log("Check AI config:", { model });
   if (!model) {
     return false;
   }

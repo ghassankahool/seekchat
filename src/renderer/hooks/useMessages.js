@@ -20,7 +20,7 @@ import { sendMessageToAI } from "../services/aiService";
 /**
  * message management hook, for handling message sending, receiving and status management
  * @param {Object} session current session
- * @param {Object} sessionSettings 会话设置，包含temperature等
+ * @param {Object} sessionSettings Session settings including temperature etc.
  * @returns {Object} contains message related status and methods
  */
 export const useMessages = (session, sessionSettings) => {
@@ -42,8 +42,8 @@ export const useMessages = (session, sessionSettings) => {
 
   // ================== scroll control ==================
   /**
-   * 滚动到聊天底部的函数
-   * 已优化为立即滚动到底部，没有过渡动画或不必要的延迟
+   * Function to scroll to the bottom of the chat
+   * Optimized for instant scrolling to bottom, no transition animation or unnecessary delay
    */
   const scrollToBottom = useCallback(() => {
     if (messagesEndRef.current) {
@@ -74,7 +74,7 @@ export const useMessages = (session, sessionSettings) => {
         }));
         setMessages(processedMessages);
       } catch (error) {
-        console.error("加载消息失败:", error);
+        console.error("Failed to load messages:", error);
         antMessage.error(t("chat.loadMessagesFailed"));
       } finally {
         setLoading(false);
@@ -97,14 +97,14 @@ export const useMessages = (session, sessionSettings) => {
     }
   }, [session?.id, loadMessages]);
 
-  // 当消息加载完成后，滚动到底部
+  // When messages are loaded, scroll to bottom
   useEffect(() => {
     if (messages.length > 0 && !loading) {
-      // console.log("消息加载完成，准备滚动到底部");
-      // 使用requestAnimationFrame确保DOM已更新后再滚动
+      // console.log("Messages loaded, preparing to scroll to bottom");
+      // Use requestAnimationFrame to ensure DOM is updated before scrolling
       requestAnimationFrame(() => {
         scrollToBottom();
-        // console.log("已执行滚动到底部");
+        // console.log("Scroll to bottom executed");
       });
     }
   }, [messages, loading, scrollToBottom]);
@@ -123,7 +123,7 @@ export const useMessages = (session, sessionSettings) => {
         noLimit: false, // default enable limit
       };
 
-      // 优先使用sessionSettings的值，即使targetSession不存在
+      // Prioritize sessionSettings values even if targetSession doesn't exist
       if (sessionSettings) {
         console.log(
           `Using sessionSettings: ${JSON.stringify(sessionSettings)}`
@@ -135,7 +135,7 @@ export const useMessages = (session, sessionSettings) => {
             `Using contextLength from sessionSettings: ${contextLength}`
           );
 
-          // 如果contextLength为-1，则表示无限制
+          // If contextLength is -1, it means unlimited
           if (contextLength === -1) {
             console.log("Context length is -1, setting noLimit=true");
             settings.noLimit = true;
@@ -176,12 +176,12 @@ export const useMessages = (session, sessionSettings) => {
             );
           }
 
-          // 检查新的contextLength字段
+          // Check new contextLength field
           if (metadata.contextLength !== undefined) {
             const contextLength = parseInt(metadata.contextLength);
             console.log(`Using contextLength from metadata: ${contextLength}`);
 
-            // 如果contextLength为-1，则表示无限制
+            // If contextLength is -1, it means unlimited
             if (contextLength === -1) {
               console.log("Context length is -1, setting noLimit=true");
               settings.noLimit = true;
@@ -191,7 +191,7 @@ export const useMessages = (session, sessionSettings) => {
             }
           }
 
-          // 兼容旧的noContextLimit字段
+          // Compatible with legacy noContextLimit field
           if (metadata.noContextLimit) {
             settings.noLimit = true;
             console.log("Using legacy noContextLimit=true");
@@ -280,7 +280,7 @@ export const useMessages = (session, sessionSettings) => {
             }
           }
 
-          // 如果找到了助手消息
+          // If assistant message found
           if (nextAssistantIndex !== -1) {
             const assistantMsg = validMessages[nextAssistantIndex];
 
@@ -321,7 +321,7 @@ export const useMessages = (session, sessionSettings) => {
         }
       }
 
-      // 如果没有有效消息，返回空数组
+      // If no valid messages, return empty array
       if (alternatingMessages.length === 0) {
         console.log(
           "no valid alternating message pair, cannot build conversation"
@@ -345,7 +345,7 @@ export const useMessages = (session, sessionSettings) => {
         }
       }
 
-      // 确保最后一条消息是用户消息
+      // Ensure the last message is a user message
       if (
         alternatingMessages.length > 0 &&
         alternatingMessages[alternatingMessages.length - 1].role !== "user"
@@ -362,7 +362,7 @@ export const useMessages = (session, sessionSettings) => {
         }
       }
 
-      // 应用消息数量限制
+      // Apply message count limit
       if (
         !noLimit &&
         maxMessages > 0 &&
@@ -387,27 +387,27 @@ export const useMessages = (session, sessionSettings) => {
         const lastUserMessage =
           alternatingMessages[alternatingMessages.length - 1];
 
-        // 截取消息，保留最近的消息
+        // Truncate messages, keep recent messages
         alternatingMessages = alternatingMessages.slice(-maxMessages);
 
-        // 确保第一条消息是用户消息
+        // Ensure the first message is a user message
         if (
           alternatingMessages.length > 0 &&
           alternatingMessages[0].role !== "user"
         ) {
-          // 查找新数组中的第一条用户消息
+          // Find the first user message in the new array
           const firstUserIndex = alternatingMessages.findIndex(
             (msg) => msg.role === "user"
           );
           if (firstUserIndex > 0) {
-            // 移到开头
+            // Move to beginning
             const firstUserMsg = alternatingMessages.splice(
               firstUserIndex,
               1
             )[0];
             alternatingMessages.unshift(firstUserMsg);
 
-            // 如果这导致数组超出大小限制，移除一条消息
+            // If this causes the array to exceed size limit, remove one message
             if (alternatingMessages.length > maxMessages) {
               alternatingMessages.splice(1, 1);
             }
@@ -430,7 +430,7 @@ export const useMessages = (session, sessionSettings) => {
         );
       }
 
-      // 特殊情况：如果限制为1，只返回最后的用户消息
+      // Special case: if limit is 1, only return the last user message
       if (maxMessages === 1) {
         const lastUserIndex = alternatingMessages.findIndex(
           (msg) => msg.role === "user"
@@ -440,24 +440,24 @@ export const useMessages = (session, sessionSettings) => {
         }
       }
 
-      // 最后检查一次确保严格交替（除了最后可能是用户消息）
+      // Final check to ensure strict alternation (except last may be user message)
       let finalMessages = [];
       let expectedRole = "user";
 
       for (const msg of alternatingMessages) {
         if (msg.role === expectedRole) {
           finalMessages.push(msg);
-          // 切换下一个期望的角色
+          // Switch next expected role
           expectedRole = expectedRole === "user" ? "assistant" : "user";
         }
       }
 
-      // 如果最后不是用户消息，找到最后的用户消息并添加
+      // If last is not user message, find the last user message and add it
       if (
         finalMessages.length > 0 &&
         finalMessages[finalMessages.length - 1].role !== "user"
       ) {
-        // 找到最后的用户消息
+        // Find the last user message
         for (let i = alternatingMessages.length - 1; i >= 0; i--) {
           if (alternatingMessages[i].role === "user") {
             finalMessages.push(alternatingMessages[i]);
@@ -473,17 +473,17 @@ export const useMessages = (session, sessionSettings) => {
   );
 
   /**
-   * 确保第一条消息是用户消息
-   * @param {Array} messages 消息数组
-   * @returns {Array} 调整后的消息数组
+   * Ensure the first message is a user message
+   * @param {Array} messages Message array
+   * @returns {Array} Adjusted message array
    */
   const ensureUserMessageFirst = useCallback((messages) => {
     if (messages.length > 1 && messages[0].role !== "user") {
-      console.log("第一条不是用户消息，调整顺序");
-      // 查找第一条用户消息
+      console.log("First is not user message, adjusting order");
+      // Find the first user message
       const firstUserIndex = messages.findIndex((msg) => msg.role === "user");
       if (firstUserIndex > 0) {
-        // 将第一条用户消息移到数组开头
+        // Move the first user message to the beginning of the array
         const firstUserMsg = messages.splice(firstUserIndex, 1)[0];
         messages.unshift(firstUserMsg);
       }
@@ -491,14 +491,14 @@ export const useMessages = (session, sessionSettings) => {
     return messages;
   }, []);
 
-  // ================== 消息更新 ==================
+  // ================== Message Update ==================
   /**
-   * 更新AI消息内容和状态
-   * @param {Number} messageId 消息ID
-   * @param {String} content 消息内容
-   * @param {String} reasoning_content 推理内容
-   * @param {String} status 消息状态
-   * @param {Array} toolCallResults 工具调用结果
+   * Update AI message content and status
+   * @param {Number} messageId Message ID
+   * @param {String} content Message content
+   * @param {String} reasoning_content Reasoning content
+   * @param {String} status Message status
+   * @param {Array} toolCallResults Tool call results
    */
   const updateAIMessage = useCallback(
     async (
@@ -521,33 +521,33 @@ export const useMessages = (session, sessionSettings) => {
           : []),
       ];
 
-      // 如果存在工具调用结果，添加到消息内容中
+      // If tool call results exist, add them to message content
       if (toolCallResults && toolCallResults.length > 0) {
         messageContent.push(
           createMessageContent("tool_calls", toolCallResults, status)
         );
 
-        // 不再单独保存工具调用到数据库，而是直接包含在消息内容中
+        // No longer save tool calls to database separately, but include them directly in message content
         // saveToolCalls(messageId, toolCallResults);
       }
 
       const updatedContent = JSON.stringify(messageContent);
 
       try {
-        // 更新数据库中的消息内容
+        // Update message content in database
         if (status === "success" || status === "error") {
           await updateMessageContent(messageId, updatedContent, electronAPI);
           await updateMessageStatus(messageId, status, electronAPI);
 
-          // 当消息状态为成功或错误时，也直接滚动到底部
-          // 使用requestAnimationFrame确保DOM更新后再滚动
+          // When message status is success or error, also scroll to bottom directly
+          // Use requestAnimationFrame to ensure scrolling after DOM update
           requestAnimationFrame(() => {
             scrollToBottom();
-            console.log("AI消息完成，已滚动到底部");
+            console.log("AI message complete, scrolled to bottom");
           });
         }
 
-        // 更新本地消息列表 - 使用函数式更新以确保始终基于最新状态
+        // Update local message list - use functional update to ensure always based on latest state
         setMessages((prevMessages) =>
           prevMessages.map((msg) =>
             msg.id === messageId
@@ -560,33 +560,33 @@ export const useMessages = (session, sessionSettings) => {
           )
         );
       } catch (error) {
-        console.error("更新消息内容失败:", error);
+        console.error("Failed to update message content:", error);
       }
     },
     [electronAPI, scrollToBottom]
   );
 
-  // ================== 获取最新会话 ==================
+  // ================== Get Latest Session ==================
   /**
-   * 获取最新的会话数据
-   * @param {Object} currentSession 当前会话
-   * @returns {Promise<Object>} 最新的会话数据
+   * Get latest session data
+   * @param {Object} currentSession Current session
+   * @returns {Promise<Object>} Latest session data
    */
   const getFreshSession = useCallback(
     async (currentSession) => {
       try {
-        // 如果可能的话，从数据库重新获取最新的会话信息
+        // If possible, get latest session information from database
         if (electronAPI && electronAPI.getSessions) {
           const sessions = await electronAPI.getSessions();
           const freshSession = sessions.find((s) => s.id === currentSession.id);
           if (freshSession) {
-            console.log("已获取最新会话信息:", freshSession.id);
+            console.log("Got latest session info:", freshSession.id);
             return freshSession;
           }
         }
         return currentSession;
       } catch (error) {
-        console.error("获取最新会话信息失败:", error);
+        console.error("Failed to get latest session info:", error);
         return currentSession;
       }
     },
@@ -594,18 +594,18 @@ export const useMessages = (session, sessionSettings) => {
   );
 
   /**
-   * 从会话元数据中获取温度设置
-   * @param {Object} sessionData 会话数据
-   * @returns {Number} 温度值
+   * Get temperature setting from session metadata
+   * @param {Object} sessionData Session data
+   * @returns {Number} Temperature value
    */
   const getTemperatureSetting = useCallback(
     (sessionData) => {
-      let temperature = 0.7; // 默认值
+      let temperature = 0.7; // Default value
 
-      // 优先使用传入的sessionSettings
+      // Prefer using passed sessionSettings
       if (sessionSettings && sessionSettings.temperature !== undefined) {
         temperature = parseFloat(sessionSettings.temperature);
-        console.log(`使用传入的会话温度设置: ${temperature}`);
+        console.log(`Using passed session temperature setting: ${temperature}`);
         return temperature;
       }
 
@@ -618,11 +618,11 @@ export const useMessages = (session, sessionSettings) => {
 
           if (metadata.temperature !== undefined) {
             temperature = parseFloat(metadata.temperature);
-            console.log(`使用会话自定义温度: ${temperature}`);
+            console.log(`Using session custom temperature: ${temperature}`);
           }
         }
       } catch (error) {
-        console.error("解析会话温度设置失败:", error);
+        console.error("Failed to parse session temperature setting:", error);
       }
 
       return temperature;
@@ -630,13 +630,13 @@ export const useMessages = (session, sessionSettings) => {
     [sessionSettings]
   );
 
-  // ================== 消息发送 ==================
+  // ================== Message Sending ==================
   /**
-   * 创建并保存用户消息
-   * @param {String} content 消息内容
-   * @param {Object} sessionData 会话数据
-   * @param {Object} userConfig 用户配置
-   * @returns {Object} 本地用户消息对象
+   * Create and save user message
+   * @param {String} content Message content
+   * @param {Object} sessionData Session data
+   * @param {Object} userConfig User configuration
+   * @returns {Object} Local user message object
    */
   const createUserMessage = useCallback(
     async (content, sessionData, userConfig) => {
@@ -659,10 +659,10 @@ export const useMessages = (session, sessionSettings) => {
   );
 
   /**
-   * 创建并保存AI响应消息
-   * @param {Object} sessionData 会话数据
-   * @param {Object} userConfig 用户配置
-   * @returns {Object} 本地AI消息对象和保存的消息ID
+   * Create and save AI response message
+   * @param {Object} sessionData Session data
+   * @param {Object} userConfig User configuration
+   * @returns {Object} Local AI message object and saved message ID
    */
   const createAIMessage = useCallback(
     async (sessionData, userConfig) => {
@@ -680,7 +680,7 @@ export const useMessages = (session, sessionSettings) => {
 
       const savedAiMessage = await saveMessage(aiMessage, electronAPI);
 
-      // 保存当前AI消息ID，以便于停止生成时使用
+      // Save current AI message ID for use when stopping generation
       setCurrentAIMessageId(savedAiMessage.id);
 
       return {
@@ -698,11 +698,11 @@ export const useMessages = (session, sessionSettings) => {
   );
 
   /**
-   * 发送消息到AI服务
-   * @param {Object} currentSession 当前会话
-   * @param {Array} allMessages 所有消息
-   * @param {Number} aiMessageId AI消息ID
-   * @param {Number} temperature 温度设置
+   * Send message to AI service
+   * @param {Object} currentSession Current session
+   * @param {Array} allMessages All messages
+   * @param {Number} aiMessageId AI message ID
+   * @param {Number} temperature Temperature setting
    */
   const sendMessageToAI = useCallback(
     async (currentSession, allMessages, aiMessageId, temperature) => {
@@ -715,11 +715,11 @@ export const useMessages = (session, sessionSettings) => {
           `temperature=${temperature}`
         );
 
-        // 创建一个新的AbortController用于取消请求
+        // Create a new AbortController for cancelling requests
         const abortController = new AbortController();
         abortControllerRef.current = abortController;
 
-        // 应用上下文长度限制，获取需要发送的消息
+        // Apply context length limiting, get messages to send
         const messagesToSend = parseNeedSendMessage(
           allMessages,
           currentSession
@@ -728,17 +728,17 @@ export const useMessages = (session, sessionSettings) => {
           `After context limiting, sending ${messagesToSend.length} messages to AI service`
         );
 
-        // 获取激活的MCP工具
+        // Get active MCP tools
         let mcpTools = [];
         try {
           mcpTools = await mcpService.getAllActiveTools();
-          console.log(`获取到${mcpTools.length}个激活的MCP工具`);
+          console.log(`Got ${mcpTools.length} active MCP tools`);
         } catch (error) {
-          console.error("获取MCP工具失败:", error);
-          // 获取工具失败不影响正常聊天
+          console.error("Failed to get MCP tools:", error);
+          // Tool retrieval failure doesn't affect normal chat
         }
 
-        // 记录前两条和最后一条消息，帮助调试
+        // Log first two and last message to help debugging
         if (messagesToSend.length > 0) {
           console.log("First message:", {
             role: messagesToSend[0].role,
@@ -776,13 +776,13 @@ export const useMessages = (session, sessionSettings) => {
         await sendMessage(
           messagesToSend,
           currentSession,
-          // 流式更新回调
+          // Stream update callback
           (response) => {
             const content = response.content || "";
             const reasoning_content = response.reasoning_content || "";
-            // 获取工具调用状态
+            // Get tool call status
             const toolCallResults = response.toolCallResults || [];
-            // receiving 表示会显示在ui上，但不会立即更新到db中
+            // receiving means it will be displayed in UI but not immediately updated to db
             updateAIMessage(
               aiMessageId,
               content,
@@ -791,24 +791,24 @@ export const useMessages = (session, sessionSettings) => {
               toolCallResults
             );
           },
-          // 错误回调
+          // Error callback
           async (error) => {
             console.log("sendMessageToAI error", error);
-            // 如果是因为请求被中止导致的错误，则忽略它（我们已经在handleStopGeneration中处理了）
+            // If error is caused by request abortion, ignore it (we already handled it in handleStopGeneration)
             if (error.name === "AbortError") {
-              console.log("请求已被用户取消");
+              console.log("Request cancelled by user");
               return;
             }
 
-            const errorContent = error.message || "发送消息失败";
+            const errorContent = error.message || "Failed to send message";
             updateAIMessage(aiMessageId, errorContent, "", "error");
 
-            // 清除当前AI消息ID
+            // Clear current AI message ID
             setCurrentAIMessageId(null);
             setIsSending(false);
             abortControllerRef.current = null;
           },
-          // 完成回调
+          // Complete callback
           async (response) => {
             console.log("sendMessageToAI complete", response);
             const content = response.content || "";
@@ -822,7 +822,7 @@ export const useMessages = (session, sessionSettings) => {
               toolCallResults
             );
 
-            // 清除当前AI消息ID
+            // Clear current AI message ID
             setCurrentAIMessageId(null);
             setIsSending(false);
             abortControllerRef.current = null;
@@ -831,7 +831,7 @@ export const useMessages = (session, sessionSettings) => {
           {
             temperature,
             signal: abortController.signal,
-            mcpTools, // 传递MCP工具
+            mcpTools, // Pass MCP tools
           }
         );
 
@@ -858,7 +858,7 @@ export const useMessages = (session, sessionSettings) => {
 
   /**
    * handle send message - main function
-   * @param {string} content 要发送的消息内容
+   * @param {string} content Content of the message to send
    */
   const handleSendMessage = useCallback(
     async (content) => {
@@ -878,7 +878,7 @@ export const useMessages = (session, sessionSettings) => {
       // get current config and provider and model infofig and provider and model info
       const userConfig = getUserConfig();
 
-      // 设置发送状态
+      // Set sending status
       setIsSending(true);
 
       try {
@@ -899,11 +899,11 @@ export const useMessages = (session, sessionSettings) => {
         setMessages((prevMessages) => [...prevMessages, localAiMessage]);
         console.log("localAiMessage", localAiMessage);
 
-        // 发送消息后直接滚动到底部
-        // 使用requestAnimationFrame确保DOM更新后再滚动
+        // Scroll to bottom directly after sending message
+        // Use requestAnimationFrame to ensure scrolling after DOM update
         requestAnimationFrame(() => {
           scrollToBottom();
-          console.log("发送消息后，已滚动到底部");
+          console.log("After sending message, scrolled to bottom");
         });
 
         // get temperature setting
@@ -936,7 +936,7 @@ export const useMessages = (session, sessionSettings) => {
 
   /**
    * handle stop generation operation
-   * mark the current generating message as error, content is user主动终止
+   * mark the current generating message as error, content is user stopped
    */
   const handleStopGeneration = useCallback(async () => {
     if (!currentAIMessageId) {
@@ -947,7 +947,7 @@ export const useMessages = (session, sessionSettings) => {
     try {
       console.log(`stop generation message id: ${currentAIMessageId}`);
 
-      // 取消网络请求
+      // Cancel network request
       if (abortControllerRef.current) {
         console.log("abort network request");
         abortControllerRef.current.abort();

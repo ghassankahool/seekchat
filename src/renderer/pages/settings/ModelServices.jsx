@@ -33,11 +33,11 @@ const ModelServices = ({
   }, [initialProviders]);
 
   const handleProviderEnabledChange = (providerId, enabled) => {
-    // 使用providerService来启用/禁用提供商
+    // Use providerService to enable/disable provider
     const result = providerService.enableProvider(providerId, enabled);
 
     if (result.success) {
-      // 更新本地状态
+      // Update local state
       const updatedProviders = providers.map((provider) => {
         if (provider.id === providerId) {
           return { ...provider, enabled };
@@ -61,18 +61,18 @@ const ModelServices = ({
     }
   };
 
-  // 显示添加供应商对话框
+  // Show add provider dialog
   const showAddModal = () => {
     setIsAddModalVisible(true);
     form.resetFields();
   };
 
-  // 处理添加供应商
+  // Handle add provider
   const handleAddProvider = async () => {
     try {
       const values = await form.validateFields();
 
-      // 创建新的供应商对象
+      // Create new provider object
       const newProviderData = {
         name: values.name,
         baseUrl: values.baseUrl,
@@ -87,11 +87,11 @@ const ModelServices = ({
         enabled: true,
       };
 
-      // 使用providerService添加自定义提供商
+      // Use providerService to add custom provider
       const result = providerService.addCustomProvider(newProviderData);
 
       if (result.success) {
-        // 重新获取所有提供商，确保数据一致性
+        // Re-fetch all providers to ensure data consistency
         const allProviders = providerService.getAllProviders();
         setProviders(allProviders);
 
@@ -105,7 +105,7 @@ const ModelServices = ({
         message.error(result.message || t("settings.addProviderFailed"));
       }
     } catch (error) {
-      console.error("添加供应商失败:", error);
+      console.error("Failed to add provider:", error);
       message.error(t("settings.addProviderFailed"));
     }
   };
@@ -143,7 +143,7 @@ const ModelServices = ({
                           className="provider-logo"
                           onError={(e) => {
                             e.target.style.display = "none";
-                            // 显示首字母
+                            // Display first letter
                             const textElement =
                               e.target.parentNode.querySelector(
                                 ".provider-logo-text"
@@ -181,7 +181,7 @@ const ModelServices = ({
                   </div>
                 </div>
               ))}
-              {/* 添加供应商按钮作为最后一个卡片 */}
+              {/* Add provider button as the last card */}
               <div
                 className="provider-grid-item add-provider-item"
                 onClick={showAddModal}
@@ -202,7 +202,7 @@ const ModelServices = ({
         </div>
       </Card>
 
-      {/* 添加供应商对话框 */}
+      {/* Add provider dialog */}
       <Modal
         title={t("settings.addCustomProvider")}
         open={isAddModalVisible}

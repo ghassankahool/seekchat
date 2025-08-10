@@ -19,7 +19,7 @@ import "../styles/ChatPage.css";
 import { useTranslation } from "react-i18next";
 
 const { Sider, Content, Header } = Layout;
-// 使用preload.js中暴露的API
+// Use the API exposed in preload.js
 const electronAPI = window.electronAPI;
 
 const ChatPage = () => {
@@ -31,7 +31,7 @@ const ChatPage = () => {
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
   const navigate = useNavigate();
 
-  // 检测窗口大小变化
+  // Detect window size changes
   useEffect(() => {
     const handleResize = () => {
       const mobile = window.innerWidth < 768;
@@ -42,27 +42,27 @@ const ChatPage = () => {
     };
 
     window.addEventListener("resize", handleResize);
-    handleResize(); // 初始调用一次
+  handleResize(); // Initial call
     return () => window.removeEventListener("resize", handleResize);
   }, [siderCollapsed]);
 
-  // 加载所有会话
+  // Load all sessions
   const loadSessions = async () => {
     try {
       const sessionList = await electronAPI.getSessions();
       setSessions(sessionList);
 
-      // 如果有会话，默认选择第一个
+      // If there are sessions, select the first one by default
       if (sessionList.length > 0 && !currentSession) {
         setCurrentSession(sessionList[0]);
       }
     } catch (error) {
-      console.error("加载会话失败:", error);
+      console.error("Failed to load sessions:", error);
       message.error(t("common.loading") + t("common.failed"));
     }
   };
 
-  // 创建新会话
+  // Create a new session
   const createNewSession = async (name) => {
     try {
       const sessionName = name || `${t("chat.newChat")} ${sessions.length + 1}`;
@@ -70,34 +70,34 @@ const ChatPage = () => {
       setSessions([newSession, ...sessions]);
       setCurrentSession(newSession);
 
-      // 如果是移动设备，创建新会话后自动收起侧边栏
+      // If on mobile, automatically collapse the sidebar after creating a new session
       if (isMobile) {
         setSiderCollapsed(true);
       }
 
       message.success(t("chat.newChat") + t("common.success"));
     } catch (error) {
-      console.error("创建会话失败:", error);
+      console.error("Failed to create session:", error);
       message.error(t("chat.newChat") + t("common.failed"));
     }
   };
 
-  // 加载会话列表
+  // Load session list
   useEffect(() => {
     loadSessions();
   }, []);
 
-  // 切换侧边栏显示状态
+  // Toggle sidebar visibility
   const toggleSider = () => {
     setSiderCollapsed(!siderCollapsed);
   };
 
-  // 快速创建新会话
+  // Quickly create a new session
   const handleQuickNewSession = () => {
     createNewSession();
   };
 
-  // 处理删除会话
+  // Handle session deletion
   const handleDeleteSession = (sessionId) => {
     const updatedSessions = sessions.filter(
       (session) => session.id !== sessionId
@@ -109,12 +109,12 @@ const ChatPage = () => {
     }
   };
 
-  // 更新会话列表
+  // Update session list
   const handleSessionListUpdate = (updatedSessions) => {
     setSessions(updatedSessions);
   };
 
-  // 用户菜单
+  // User menu
   const userMenu = (
     <Menu>
       <Menu.Item

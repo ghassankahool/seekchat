@@ -1,19 +1,19 @@
 /**
- * DeepSeek 适配器
- * 处理与DeepSeek API的交互
+ * DeepSeek adapter
+ * Handles interaction with DeepSeek API
  */
 
 import baseOpenAICompatibleAdapter from "./baseAdapter.js";
 
 /**
- * DeepSeek 提供商适配器
- * @param {Array} messages 消息列表
- * @param {Object} provider 提供商配置
- * @param {Object} model 模型配置
- * @param {Function} onProgress 进度回调函数
- * @param {Function} onComplete 完成回调函数
- * @param {Object} options 选项参数
- * @returns {Promise} 响应
+ * DeepSeek provider adapter
+ * @param {Array} messages Message list
+ * @param {Object} provider Provider configuration
+ * @param {Object} model Model configuration
+ * @param {Function} onProgress Progress callback function
+ * @param {Function} onComplete Complete callback function
+ * @param {Object} options Option parameters
+ * @returns {Promise} Response
  */
 const deepseekAdapter = async (
   messages,

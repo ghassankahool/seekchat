@@ -1,20 +1,20 @@
 /**
- * 基础OpenAI兼容适配器
- * 为所有OpenAI兼容的提供商提供统一的接口实现
+ * Base OpenAI-compatible adapter
+ * Provides unified interface implementation for all OpenAI-compatible providers
  */
 
 /**
- * 基础OpenAI兼容适配器
- * 为所有OpenAI兼容的提供商提供统一的接口实现
+ * Base OpenAI-compatible adapter
+ * Provides unified interface implementation for all OpenAI-compatible providers
  *
- * @param {Array} messages - 消息列表
- * @param {Object} provider - 提供商配置
- * @param {Object} model - 模型配置
- * @param {Function} onProgress - 流式回调函数
- * @param {Function} onComplete - 完成回调函数
- * @param {Object} options - 选项参数
- * @param {Object} adapterConfig - 适配器特定配置
- * @returns {Promise<Object>} 响应对象
+ * @param {Array} messages - Message list
+ * @param {Object} provider - Provider configuration
+ * @param {Object} model - Model configuration
+ * @param {Function} onProgress - Streaming callback function
+ * @param {Function} onComplete - Complete callback function
+ * @param {Object} options - Option parameters
+ * @param {Object} adapterConfig - Adapter-specific configuration
+ * @returns {Promise<Object>} Response object
  */
 export const baseOpenAICompatibleAdapter = async (
   messages,
@@ -25,54 +25,54 @@ export const baseOpenAICompatibleAdapter = async (
   options = {},
   adapterConfig = {}
 ) => {
-  // 提取适配器配置
+  // Extract adapter configuration
   const {
-    // 端点配置
+    // Endpoint configuration
     endpoint = "/chat/completions",
-    // 请求体转换器
+    // Request body transformer
     requestTransformer = null,
-    // 响应解析器
+    // Response parser
     responseParser = null,
-    // 流式响应处理器
+    // Stream response processor
     streamProcessor = null,
-    // 错误处理器
+    // Error handler
     errorHandler = null,
   } = adapterConfig;
 
-  // 获取API密钥和基础URL
+  // Get API key and base URL
   const apiKey = provider.apiKey;
   const baseUrl = provider.baseUrl || "";
 
-  // 构建请求头
+  // Build request headers
   const headers = {
     "Content-Type": "application/json",
     Authorization: `Bearer ${apiKey}`,
   };
 
-  // 默认请求体
+  // Default request body
   let requestBody = {
     model: model.id,
     messages: messages,
     temperature: options.temperature !== undefined ? options.temperature : 0.7,
-    stream: !!onProgress, // 如果有onProgress回调，启用流式传输
+    stream: !!onProgress, // If there's onProgress callback, enable streaming
   };
 
-  // 处理工具/函数
+  // Handle tools/functions
   if (
     options.tools &&
     Array.isArray(options.tools) &&
     options.tools.length > 0
   ) {
     requestBody.tools = options.tools;
-    requestBody.tool_choice = "auto"; // 默认让模型自动选择是否使用工具
+    requestBody.tool_choice = "auto"; // By default let model automatically choose whether to use tools
   }
 
-  // 如果有请求转换器，使用转换器修改请求体
+  // If there's a request transformer, use transformer to modify request body
   if (requestTransformer) {
     requestBody = requestTransformer(requestBody, model, options, provider);
   }
 
-  console.log(`${provider.name} API请求参数:`, {
+  console.log(`${provider.name} API request parameters:`, {
     model: model.id,
     messagesCount: messages.length,
     temperature: requestBody.temperature,
@@ -82,18 +82,18 @@ export const baseOpenAICompatibleAdapter = async (
   });
 
   try {
-    // 构建请求URL
+    // Build request URL
     const requestUrl = `${baseUrl}${endpoint}`;
 
-    // 发送API请求
+    // Send API request
     const response = await fetch(requestUrl, {
       method: "POST",
       headers: headers,
       body: JSON.stringify(requestBody),
-      signal: options.signal, // 添加信号用于取消请求
+      signal: options.signal, // Add signal for request cancellation
     });
 
-    // 处理错误响应
+    // Handle error response
     if (!response.ok) {
       let errorData;
       try {
@@ -106,7 +106,7 @@ export const baseOpenAICompatibleAdapter = async (
         errorData.error?.message ||
         `${provider.name} API error: ${response.status}`;
 
-      // 如果有自定义错误处理器，调用它
+      // If there's a custom error handler, call it
       if (errorHandler) {
         return errorHandler(errorMessage, errorData, response);
       }
@@ -114,7 +114,7 @@ export const baseOpenAICompatibleAdapter = async (
       throw new Error(errorMessage);
     }
 
-    // 处理流式响应
+    // Handle streaming response
     if (requestBody.stream) {
       const reader = response.body.getReader();
       const decoder = new TextDecoder("utf-8");
@@ -122,7 +122,7 @@ export const baseOpenAICompatibleAdapter = async (
       let reasoning_content = "";
       let currentToolCalls = [];
 
-      // 读取流式响应
+      // Read streaming response
       while (true) {
         const { done, value } = await reader.read();
         if (done) break;
@@ -137,10 +137,10 @@ export const baseOpenAICompatibleAdapter = async (
         for (const line of lines) {
           if (line.startsWith("data: ")) {
             try {
-              // 解析数据行
+              // Parse data line
               const data = JSON.parse(line.slice(6));
 
-              // 使用流处理器或默认处理逻辑
+              // Use stream processor or default processing logic
               if (streamProcessor) {
                 const result = streamProcessor(
                   data,
@@ -160,7 +160,7 @@ export const baseOpenAICompatibleAdapter = async (
                       ? result.toolCalls
                       : currentToolCalls;
 
-                  // 如果有内容更新，调用进度回调
+                  // If there's content update, call progress callback
                   if (result.hasUpdate) {
                     console.log("onProgress", {
                       content,
@@ -182,26 +182,26 @@ export const baseOpenAICompatibleAdapter = async (
                   }
                 }
               } else {
-                // 默认OpenAI格式处理
+                // Default OpenAI format processing
                 let hasUpdate = false;
 
                 if (data.choices && data.choices[0].delta) {
-                  // 处理内容更新
+                  // Handle content updates
                   if (data.choices[0].delta.content) {
                     content += data.choices[0].delta.content;
                     hasUpdate = true;
                   }
 
-                  // 处理reasoning_content更新
+                  // Handle reasoning_content updates
                   if (data.choices[0].delta.reasoning_content) {
                     reasoning_content +=
                       data.choices[0].delta.reasoning_content;
                     hasUpdate = true;
                   }
 
-                  // 处理工具调用更新
+                  // Handle tool call updates
                   if (data.choices[0].delta.tool_calls) {
-                    // 合并工具调用信息
+                    // Merge tool call information
                     const deltaToolCalls = data.choices[0].delta.tool_calls;
 
                     for (const deltaToolCall of deltaToolCalls) {
@@ -211,7 +211,7 @@ export const baseOpenAICompatibleAdapter = async (
                         type,
                         function: functionData,
                       } = deltaToolCall;
-                      // 查找现有工具调用或创建新的
+                      // Find existing tool call or create new one
                       let existingToolCall = currentToolCalls.find(
                         (tc) => tc.index === index
                       );
@@ -226,17 +226,17 @@ export const baseOpenAICompatibleAdapter = async (
                         currentToolCalls.push(existingToolCall);
                       }
 
-                      // 更新ID和类型
+                      // Update ID and type
                       if (id) existingToolCall.id = id;
                       if (type) existingToolCall.type = type;
 
-                      // 更新函数信息
+                      // Update function information
                       if (functionData) {
                         if (functionData.name) {
                           existingToolCall.function.name = functionData.name;
                         }
                         if (functionData.arguments) {
-                          // 处理可能包含特殊token的参数
+                          // Handle parameters that might contain special tokens
                           let argsStr = functionData.arguments;
                           existingToolCall.function.arguments += argsStr;
                         }
@@ -247,7 +247,7 @@ export const baseOpenAICompatibleAdapter = async (
                   }
                 }
 
-                // 如果有更新，调用进度回调
+                // If there are updates, call progress callback
                 if (hasUpdate) {
                   // console.log("onProgress", {
                   //   content,
@@ -262,13 +262,13 @@ export const baseOpenAICompatibleAdapter = async (
                 }
               }
             } catch (e) {
-              console.error("解析流数据失败:", e);
+              console.error("Failed to parse stream data:", e);
             }
           }
         }
       }
 
-      // 流结束，调用完成回调
+      // Stream ended, call completion callback
       if (onComplete) {
         console.log("onComplete", {
           content,
@@ -282,7 +282,7 @@ export const baseOpenAICompatibleAdapter = async (
         });
       }
 
-      // 返回最终结果
+      // Return final result
       return {
         content,
         reasoning_content,
@@ -290,15 +290,15 @@ export const baseOpenAICompatibleAdapter = async (
         toolCalls: currentToolCalls,
       };
     } else {
-      // 处理非流式响应
+      // Handle non-streaming response
       const data = await response.json();
 
-      // 使用响应解析器或默认解析逻辑
+      // Use response parser or default parsing logic
       let result;
       if (responseParser) {
         result = responseParser(data, model);
       } else {
-        // 默认OpenAI格式解析
+        // Default OpenAI format parsing
         const content =
           data.choices && data.choices[0].message
             ? data.choices[0].message.content
@@ -311,7 +311,7 @@ export const baseOpenAICompatibleAdapter = async (
             ? data.choices[0].message.reasoning_content
             : "";
 
-        // 提取工具调用
+        // Extract tool calls
         const toolCalls =
           data.choices &&
           data.choices[0].message &&
@@ -328,7 +328,7 @@ export const baseOpenAICompatibleAdapter = async (
         };
       }
 
-      // 调用完成回调
+      // Call completion callback
       if (onComplete) {
         onComplete(result);
       }
@@ -336,14 +336,14 @@ export const baseOpenAICompatibleAdapter = async (
       return result;
     }
   } catch (error) {
-    // 处理请求被取消的情况
+    // Handle request cancellation
     if (error.name === "AbortError") {
-      console.log(`${provider.name}请求被用户取消`);
+      console.log(`${provider.name} request cancelled by user`);
       throw error;
     }
 
-    // 重新抛出其他错误
-    throw new Error(`${provider.name} API 错误: ${error.message}`);
+    // Re-throw other errors
+    throw new Error(`${provider.name} API error: ${error.message}`);
   }
 };
 

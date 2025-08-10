@@ -13,11 +13,11 @@ import { Spin, Tag, Typography } from "antd";
 const { Text, Paragraph } = Typography;
 
 /**
- * MCP工具调用组件
- * @param {Object} props 组件属性
- * @param {Object} props.toolCall 工具调用信息
- * @param {boolean} props.isCollapsed 是否折叠
- * @returns {JSX.Element} MCP工具调用组件
+ * MCP tool call component
+ * @param {Object} props Component properties
+ * @param {Object} props.toolCall Tool call information
+ * @param {boolean} props.isCollapsed Whether collapsed
+ * @returns {JSX.Element} MCP tool call component
  */
 const MCPToolCall = ({ toolCall, isCollapsed = false }) => {
   const { t } = useTranslation();
@@ -33,32 +33,32 @@ const MCPToolCall = ({ toolCall, isCollapsed = false }) => {
     status = "running",
   } = toolCall;
 
-  // 增强的JSON格式化函数
+  // Enhanced JSON formatting function
   const formatJSON = (data) => {
     if (data === undefined || data === null) return "";
 
     try {
-      // 如果是字符串，尝试解析为JSON
+      // If is string, try to parse as JSON
       if (typeof data === "string") {
         try {
           const parsedData = JSON.parse(data);
           return JSON.stringify(parsedData, null, 2);
         } catch (e) {
-          // 不是有效的JSON字符串，直接返回原字符串
+          // Not valid JSON string, return original string directly
           return data;
         }
       }
 
-      // 对象或数组，直接格式化
+      // Object or array, format directly
       return JSON.stringify(data, null, 2);
     } catch (e) {
-      console.error("格式化JSON失败:", e);
-      // 如果无法处理，转换为字符串返回
+      console.error("Failed to format JSON:", e);
+      // If cannot process, convert to string and return
       return String(data);
     }
   };
 
-  // 根据状态显示不同的图标
+  // Show different icons based on status
   const getStatusIcon = () => {
     switch (status) {
       case "success":
@@ -71,7 +71,7 @@ const MCPToolCall = ({ toolCall, isCollapsed = false }) => {
     }
   };
 
-  // 根据状态显示不同的文字
+  // Show different text based on status
   const getStatusText = () => {
     switch (status) {
       case "success":

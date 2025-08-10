@@ -30,8 +30,8 @@ const { Text, Title, Paragraph } = Typography;
 const { Panel } = Collapse;
 
 /**
- * MCP工具按钮组件
- * @param {Function} onToolUse 工具使用回调
+ * MCP tools button component
+ * @param {Function} onToolUse Tool usage callback
  * @returns {JSX.Element}
  */
 const MCPToolsButton = ({ onToolUse }) => {
@@ -46,32 +46,32 @@ const MCPToolsButton = ({ onToolUse }) => {
   const [addToPrompt, setAddToPrompt] = useState(true);
   const [result, setResult] = useState(null);
 
-  // 加载激活的MCP工具
+  // Load active MCP tools
   const loadTools = async () => {
     try {
       setLoading(true);
       const activeTools = await mcpService.getAllActiveTools();
       setTools(activeTools);
     } catch (error) {
-      console.error("加载MCP工具失败:", error);
+      console.error("Failed to load MCP tools:", error);
     } finally {
       setLoading(false);
     }
   };
 
-  // 当组件挂载或模态框显示时加载工具
+  // Load tools when component mounts or modal shows
   useEffect(() => {
     if (modalVisible) {
       loadTools();
     }
   }, [modalVisible]);
 
-  // 打开模态框
+  // Open modal
   const handleOpenModal = () => {
     setModalVisible(true);
   };
 
-  // 关闭模态框
+  // Close modal
   const handleCloseModal = () => {
     setModalVisible(false);
     setSelectedTool(null);
@@ -80,7 +80,7 @@ const MCPToolsButton = ({ onToolUse }) => {
     form.resetFields();
   };
 
-  // 选择工具
+  // Select tool
   const handleSelectTool = (toolInfo) => {
     setSelectedTool(toolInfo);
     setParameterValues({});
@@ -88,7 +88,7 @@ const MCPToolsButton = ({ onToolUse }) => {
     setResult(null);
   };
 
-  // 执行工具
+  // Execute tool
   const handleExecuteTool = async () => {
     try {
       await form.validateFields();
@@ -96,17 +96,17 @@ const MCPToolsButton = ({ onToolUse }) => {
       setExecuting(true);
       setResult(null);
 
-      // 确保参数格式正确
+      // Ensure parameter format is correct
       let processedParams = {};
 
-      // 根据参数类型处理参数值
+      // Process parameter values according to parameter types
       if (selectedTool.parameters && selectedTool.parameters.properties) {
         const { properties } = selectedTool.parameters;
 
         Object.entries(parameterValues).forEach(([key, value]) => {
           const paramDef = properties[key];
           if (paramDef) {
-            // 根据参数类型转换值
+            // Convert value according to parameter type
             if (paramDef.type === "number" || paramDef.type === "integer") {
               processedParams[key] = Number(value);
             } else if (paramDef.type === "boolean") {
@@ -115,7 +115,7 @@ const MCPToolsButton = ({ onToolUse }) => {
               processedParams[key] = value;
             }
           } else {
-            // 如果没有找到参数定义，保持原值
+            // If parameter definition not found, keep original value
             processedParams[key] = value;
           }
         });
@@ -124,7 +124,7 @@ const MCPToolsButton = ({ onToolUse }) => {
       }
 
       console.log(
-        `执行工具 ${selectedTool.name} (${selectedTool.id}) 参数:`,
+        `Execute tool ${selectedTool.name} (${selectedTool.id}) parameters:`,
         processedParams
       );
 
@@ -134,26 +134,26 @@ const MCPToolsButton = ({ onToolUse }) => {
         processedParams
       );
 
-      console.log(`工具 ${selectedTool.name} 执行结果:`, result);
+      console.log(`Tool ${selectedTool.name} execution result:`, result);
       setResult(result);
 
-      // 如果操作成功且需要添加到提示，调用回调函数
+      // If operation successful and needs to add to prompt, call callback function
       if (result.success && addToPrompt && onToolUse) {
         const toolName = selectedTool.name;
         const serverName = selectedTool.serverName;
         const params = JSON.stringify(processedParams, null, 2);
         const resultContent = JSON.stringify(result.result, null, 2);
 
-        const toolPrompt = `使用工具 "${toolName}" (来自 "${serverName}") 执行结果：\n输入参数：\n\`\`\`json\n${params}\n\`\`\`\n输出结果：\n\`\`\`json\n${resultContent}\n\`\`\``;
+        const toolPrompt = `Tool "${toolName}" (from "${serverName}") execution result:\nInput parameters:\n\`\`\`json\n${params}\n\`\`\`\nOutput result:\n\`\`\`json\n${resultContent}\n\`\`\``;
 
         onToolUse(toolPrompt);
         handleCloseModal();
       }
     } catch (error) {
-      console.error("执行工具失败:", error);
+      console.error("Failed to execute tool:", error);
       setResult({
         success: false,
-        message: `执行工具失败: ${error.message}`,
+        message: `Failed to execute tool: ${error.message}`,
         result: null,
       });
     } finally {
@@ -161,7 +161,7 @@ const MCPToolsButton = ({ onToolUse }) => {
     }
   };
 
-  // 获取工具参数表单
+  // Get tool parameters form
   const getToolParametersForm = () => {
     if (!selectedTool || !selectedTool.parameters) return null;
 
@@ -210,7 +210,7 @@ const MCPToolsButton = ({ onToolUse }) => {
     );
   };
 
-  // 根据参数类型渲染输入组件
+  // Render input component based on parameter type
   const renderInputByType = (key, param) => {
     switch (param.type) {
       case "string":

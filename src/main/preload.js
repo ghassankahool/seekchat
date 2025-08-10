@@ -1,25 +1,25 @@
 const { contextBridge, ipcRenderer } = require("electron");
 
-// 用于调试
+// For debugging
 console.log("Preload script loaded successfully!");
 
-// 安全地包装 IPC 调用，添加错误处理
+// Safely wrap IPC calls, add error handling
 function safeIpcCall(channel, ...args) {
   try {
     return ipcRenderer.invoke(channel, ...args).catch((error) => {
-      console.error(`IPC 调用 ${channel} 失败:`, error);
+      console.error(`IPC call ${channel} failed:`, error);
       throw error;
     });
   } catch (error) {
-    console.error(`无法调用 IPC ${channel}:`, error);
+    console.error(`Unable to call IPC ${channel}:`, error);
     throw error;
   }
 }
 
-// 确保 API 在 window 对象上可用
+// Ensure API is available on the window object
 if (process.contextIsolated) {
   contextBridge.exposeInMainWorld("electronAPI", {
-    // 会话相关
+    // Session related
     getSessions: () => safeIpcCall("get-sessions"),
     createSession: (name) => safeIpcCall("create-session", name),
     deleteSession: (id) => safeIpcCall("delete-session", id),
@@ -28,7 +28,7 @@ if (process.contextIsolated) {
     updateSessionName: (sessionId, name) =>
       safeIpcCall("update-session-name", sessionId, name),
 
-    // 消息相关
+    // Message related
     getMessages: (sessionId) => safeIpcCall("get-messages", sessionId),
     deleteMessages: (sessionId) => safeIpcCall("delete-messages", sessionId),
     addMessage: (message) => safeIpcCall("add-message", message),
@@ -39,16 +39,16 @@ if (process.contextIsolated) {
     createOrUpdateMessage: (message) =>
       safeIpcCall("create-or-update-message", message),
 
-    // MCP相关
+    // MCP related
     invokeMCP: (channel, ...args) => safeIpcCall(channel, ...args),
 
-    // 数据库事件
+    // Database events
     onDatabaseError: (callback) => {
       ipcRenderer.on("db-error", (_, message) => callback(message));
       return () => ipcRenderer.removeListener("db-error", callback);
     },
 
-    // 在系统默认浏览器中打开链接
+    // Open link in system default browser
     openExternalURL: (url) => safeIpcCall("open-external-url", url),
   });
 } else {

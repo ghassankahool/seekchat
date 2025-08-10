@@ -6,14 +6,14 @@ import { useTranslation } from "react-i18next";
 const { TextArea } = Input;
 
 /**
- * 聊天输入容器组件
- * 独立管理输入状态，避免输入时触发整个聊天界面重新渲染
+ * Chat input container component
+ * Independently manages input state, avoiding re-rendering of entire chat interface during input
  *
- * @param {Object} props 组件属性
- * @param {Function} props.onSendMessage 发送消息回调
- * @param {Boolean} props.isSending 是否正在发送
- * @param {Function} props.onStopGeneration 停止生成回调
- * @returns {JSX.Element} 聊天输入组件
+ * @param {Object} props Component properties
+ * @param {Function} props.onSendMessage Send message callback
+ * @param {Boolean} props.isSending Whether sending
+ * @param {Function} props.onStopGeneration Stop generation callback
+ * @returns {JSX.Element} Chat input component
  */
 const ChatInputContainer = React.memo(
   ({ onSendMessage, isSending, onStopGeneration }) => {
@@ -24,10 +24,10 @@ const ChatInputContainer = React.memo(
     const handleSend = () => {
       if (!inputValue.trim()) return;
       onSendMessage(inputValue.trim());
-      setInputValue(""); // 清空输入
+      setInputValue(""); // Clear input
     };
 
-    // 监听输入法编辑状态
+    // Listen to input method editing status
     const handleCompositionStart = () => {
       setIsComposing(true);
     };
@@ -37,10 +37,10 @@ const ChatInputContainer = React.memo(
     };
 
     const handleKeyDown = (e) => {
-      // 如果正在使用输入法，不处理Enter键
+      // If using input method, don't handle Enter key
       if (isComposing) return;
 
-      // 普通Enter发送消息（但不在输入法编辑状态时）
+      // Normal Enter sends message (but not during input method editing)
       if (e.key === "Enter" && !e.shiftKey) {
         e.preventDefault();
         handleSend();

@@ -17,7 +17,7 @@ const { Content } = Layout;
 const App = () => {
   const { i18n } = useTranslation();
 
-  // 在应用启动时从用户配置中加载语言设置
+  // Load language settings from user config on app startup
   useEffect(() => {
     const userConfig = getUserConfig();
     if (userConfig.language) {

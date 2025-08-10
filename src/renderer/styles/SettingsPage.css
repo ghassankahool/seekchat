@@ -65,7 +65,7 @@
   overflow-y: auto;
 }
 
-/* 服务提供商列表 */
+/* Provider list */
 .provider-list-container {
   padding: 20px;
 }
@@ -95,13 +95,13 @@
 }
 
 .provider-grid-item.provider-disabled {
-  /* 移除灰色效果 */
+  /* Remove gray effect */
   opacity: 1;
   background-color: #fff;
 }
 
 .provider-grid-item.provider-disabled .provider-logo {
-  /* 移除灰度滤镜 */
+  /* Remove grayscale filter */
   filter: none;
 }
 
@@ -111,13 +111,13 @@
   align-items: center;
   gap: 16px;
   min-width: 0;
-  /* 确保flex子项可以缩小 */
+  /* Ensure flex items can shrink */
 }
 
 .provider-actions {
   margin-left: 10px;
   flex-shrink: 0;
-  /* 防止按钮被压缩 */
+  /* Prevent buttons from being compressed */
   position: relative;
   z-index: 1;
 }
@@ -137,7 +137,7 @@
   justify-content: center;
   margin-bottom: 0;
   flex-shrink: 0;
-  /* 防止logo被压缩 */
+  /* Prevent logo from being compressed */
   background-color: #f5f5f5;
   border-radius: 8px;
 }
@@ -152,9 +152,9 @@
   text-align: left;
   flex: 1;
   min-width: 0;
-  /* 确保flex子项可以缩小 */
+  /* Ensure flex items can shrink */
   overflow: hidden;
-  /* 防止内容溢出 */
+  /* Prevent content overflow */
 }
 
 .provider-name {
@@ -164,7 +164,7 @@
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  /* 文本过长时显示省略号 */
+  /* Show ellipsis when text is too long */
 }
 
 .provider-model-count {
@@ -183,7 +183,7 @@
   font-size: 10px;
 }
 
-/* 旧的提供商样式 */
+/* Old provider styles */
 .provider-item,
 .provider-item:hover,
 .provider-item.active,
@@ -192,7 +192,7 @@
   display: none;
 }
 
-/* 提供商设置 */
+/* Provider settings */
 .provider-settings-container {
   height: 100%;
   overflow-y: auto;
@@ -229,7 +229,7 @@
   max-width: 700px;
 }
 
-/* Card样式 */
+/* Card styles */
 .settings-card {
   margin-bottom: 16px;
   border-radius: 8px;
@@ -249,13 +249,13 @@
   padding: 20px;
 }
 
-/* 添加提示信息图标的样式 */
+/* Add info icon styles */
 .ant-form-item-label .anticon-info-circle {
   cursor: pointer;
   margin-left: 4px;
 }
 
-/* 滑块样式优化 */
+/* Slider style optimization */
 .ant-slider-mark-text {
   min-width: 50px;
   white-space: nowrap;
@@ -281,13 +281,13 @@
   margin-top: 10px;
 }
 
-/* 设置区域分组样式 */
+/* Settings section group styles */
 .settings-section {
   margin-bottom: 24px;
   padding: 0 0 24px 0;
 }
 
-/* 模型列表样式 - 卡片设计 */
+/* Model list styles - card design */
 .models-card-container {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
@@ -356,7 +356,7 @@
   color: #262626;
 }
 
-/* 设置部分的标题样式 */
+/* Settings section title styles */
 .settings-section-title {
   font-size: 16px !important;
   font-weight: 500 !important;
@@ -376,7 +376,7 @@
   border-radius: 2px;
 }
 
-/* 删除旧的样式 */
+/* Remove old styles */
 .model-list,
 .model-list-item,
 .model-list-item:hover,
@@ -402,7 +402,7 @@
   display: none;
 }
 
-/* 表单样式 */
+/* Form styles */
 .basic-settings-form .ant-form-item,
 .model-params-form .ant-form-item {
   margin-bottom: 20px;
@@ -438,7 +438,7 @@
   border-top: 1px solid #f0f0f0;
 }
 
-/* 通用设置和关于部分 */
+/* General settings and about section */
 .general-settings,
 .model-settings,
 .about-section {
@@ -447,7 +447,7 @@
   padding: 0;
 }
 
-/* 响应式调整 */
+/* Responsive adjustments */
 @media (max-width: 768px) {
   .settings-header {
     padding: 12px 16px;
@@ -549,17 +549,17 @@
   gap: 8px;
 }
 
-/* 添加模型对话框 */
+/* Add model dialog */
 .add-model-form .ant-form-item {
   margin-bottom: 16px;
 }
 
-/* 自定义供应商按钮 */
+/* Custom provider button */
 .provider-header button {
   margin-left: 16px;
 }
 
-/* 添加供应商按钮样式 */
+/* Add provider button styles */
 .add-provider-item {
   display: flex;
   justify-content: center;
@@ -595,12 +595,12 @@
   font-size: 14px;
 }
 
-/* 模型卡片操作按钮 */
+/* Model card action button */
 .model-edit-button {
   margin-left: 0;
 }
 
-/* 供应商设置页面样式 */
+/* Provider settings page styles */
 .provider-header-left {
   display: flex;
   align-items: center;
@@ -643,7 +643,7 @@
   padding: 20px;
 }
 
-/* 空模型列表状态 */
+/* Empty model list state */
 .empty-models {
   display: flex;
   justify-content: center;
@@ -659,7 +659,7 @@
   font-size: 14px;
 }
 
-/* 模型表单样式 */
+/* Model form styles */
 .model-form {
   max-width: 100%;
 }
@@ -675,7 +675,7 @@
   line-height: 1.5;
 }
 
-/* 空供应商列表状态 */
+/* Empty provider list state */
 .empty-providers {
   display: flex;
   justify-content: center;
@@ -692,7 +692,7 @@
   font-size: 14px;
 }
 
-/* 供应商表单样式 */
+/* Provider form styles */
 .provider-form {
   max-width: 100%;
 }
@@ -708,7 +708,7 @@
   line-height: 1.5;
 }
 
-/* 供应商列表容器 */
+/* Provider list container */
 .settings-content .provider-grid {
   margin-top: 16px;
 }

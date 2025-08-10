@@ -1,14 +1,14 @@
 /**
- * 通用工具函数
+ * Common utility functions
  */
 
 import i18n from "../../../i18n";
 
 /**
- * 安全解析JSON字符串
- * @param {string} jsonStr 要解析的JSON字符串
- * @param {*} defaultValue 解析失败时返回的默认值
- * @returns {*} 解析结果或默认值
+ * Safely parse JSON string
+ * @param {string} jsonStr JSON string to parse
+ * @param {*} defaultValue Default value to return when parsing fails
+ * @returns {*} Parse result or default value
  */
 export const safeJsonParse = (jsonStr, defaultValue = {}) => {
   if (!jsonStr || typeof jsonStr !== "string") {
@@ -16,7 +16,7 @@ export const safeJsonParse = (jsonStr, defaultValue = {}) => {
   }
 
   try {
-    // 清理可能的特殊token
+    // Clean possible special tokens
     let cleanStr = jsonStr;
     if (cleanStr.includes("<｜tool") || cleanStr.includes("<|tool")) {
       const tokenMatch = cleanStr.match(/<[｜|]tool[^>]*>/);
@@ -25,70 +25,70 @@ export const safeJsonParse = (jsonStr, defaultValue = {}) => {
       }
     }
 
-    // 处理形如 {\"key\": \"value\"}"} 的字符串
-    // 1. 检查是否有转义的引号
+    // Handle strings like {\"key\": \"value\"}"}
+    // 1. Check if there are escaped quotes
     if (cleanStr.includes('\\"') || cleanStr.includes('\\"')) {
-      // 2. 检查末尾是否有多余的引号和花括号
+      // 2. Check if there are extra quotes and braces at the end
       const extraEndMatch = cleanStr.match(/"\}+$/);
       if (
         extraEndMatch &&
         cleanStr.lastIndexOf('\\"') < cleanStr.length - extraEndMatch[0].length
       ) {
-        // 移除末尾多余的字符
+        // Remove extra characters at the end
         cleanStr = cleanStr.substring(
           0,
           cleanStr.length - extraEndMatch[0].length + 1
         );
       }
 
-      // 3. 尝试处理双重转义的情况
+      // 3. Try to handle double escaping
       if (cleanStr.startsWith('{\\"') || cleanStr.startsWith('{\\"')) {
         try {
-          // 先去掉转义，重新解析
+          // First remove escaping, then re-parse
           const unescaped = cleanStr.replace(/\\"/g, '"');
           return JSON.parse(unescaped);
         } catch (e) {
-          // 如果解析失败，继续使用原来的字符串进行解析
-          console.warn("去转义解析失败，尝试原始解析");
+          // If parsing fails, continue using original string for parsing
+          console.warn("Unescape parsing failed, trying original parsing");
         }
       }
     }
 
-    // 处理MCP工具返回的特殊格式JSON，例如：
+    // Handle special format JSON returned by MCP tools, for example:
     // {\"destination\": \"/path/to/dir\", \"source\": \"/path/to/file\"}"}
     if (cleanStr.match(/\\\"/g) && cleanStr.endsWith('"}')) {
       try {
-        // 删除末尾的多余引号和花括号
+        // Remove trailing extra quotes and braces
         let fixedStr = cleanStr;
         if (fixedStr.endsWith('"}')) {
           fixedStr = fixedStr.substring(0, fixedStr.length - 1);
         }
 
-        // 处理内部的转义引号
+        // Handle internal escaped quotes
         fixedStr = fixedStr.replace(/\\"/g, '"');
 
-        // 尝试解析处理后的字符串
+        // Try to parse the processed string
         const result = JSON.parse(fixedStr);
-        console.log("成功处理特殊格式JSON:", result);
+        console.log("Successfully processed special format JSON:", result);
         return result;
       } catch (e) {
-        console.warn("特殊格式JSON处理失败:", e);
-        // 如果失败，继续尝试其他方法
+        console.warn("Failed to process special format JSON:", e);
+        // If failed, continue trying other methods
       }
     }
 
     return JSON.parse(cleanStr);
   } catch (e) {
-    console.warn("JSON解析失败:", e, "原始字符串:", jsonStr);
+    console.warn("JSON parsing failed:", e, "Original string:", jsonStr);
 
-    // 最后尝试：如果字符串以 {"} 结尾，可能是多了一个引号
+    // Last attempt: if string ends with {"}, it might have an extra quote
     if (jsonStr.endsWith('"}')) {
       try {
-        // 尝试去掉最后一个引号
+        // Try to remove the last quote
         const fixedStr = jsonStr.substring(0, jsonStr.length - 1);
         return JSON.parse(fixedStr);
       } catch {
-        // 仍然失败，返回默认值
+        // Still failed, return default value
       }
     }
 
@@ -97,10 +97,10 @@ export const safeJsonParse = (jsonStr, defaultValue = {}) => {
 };
 
 /**
- * 专门处理MCP工具返回的参数
- * 用于处理形如 {\"key\": \"value\"}"} 的字符串
- * @param {string} paramStr 参数字符串
- * @returns {Object} 解析后的对象
+ * Specifically handle parameters returned by MCP tools
+ * Used to process strings like {\"key\": \"value\"}"}
+ * @param {string} paramStr Parameter string
+ * @returns {Object} Parsed object
  */
 export const parseMCPToolParams = (paramStr) => {
   console.log("parseMCPToolParams", paramStr);
@@ -108,13 +108,13 @@ export const parseMCPToolParams = (paramStr) => {
     return {};
   }
 
-  // 处理代码块格式
+  // Handle code block format
   const codeBlockRegex = /```(?:\w*\n)?([\s\S]*?)```/;
   const codeMatch = paramStr.match(codeBlockRegex);
   if (codeMatch) {
-    // 提取代码块内容
+    // Extract code block content
     let extractedArgs = codeMatch[1].trim();
-    // 清理函数调用格式，如 tool_call(name1=value1,name2=value2)
+    // Clean function call format, like tool_call(name1=value1,name2=value2)
     const functionCallRegex = /^\s*\w+\s*\(([\s\S]*?)\)\s*$/;
     const functionMatch = extractedArgs.match(functionCallRegex);
     if (functionMatch) {
@@ -123,158 +123,158 @@ export const parseMCPToolParams = (paramStr) => {
     paramStr = extractedArgs;
   }
 
-  // 处理开头可能的多余引号和空格
+  // Handle possible extra quotes and spaces at the beginning
   paramStr = paramStr.trim().replace(/^["'\s]+/, "");
 
-  // 流式解析特殊处理：尝试提取最可能是JSON的部分
-  // 查找第一个 { 和最后一个 } 之间的内容
+  // Special handling for streaming parsing: try to extract the most likely JSON part
+  // Find content between the first { and last }
   const firstBrace = paramStr.indexOf("{");
   const lastBrace = paramStr.lastIndexOf("}");
 
   if (firstBrace !== -1 && lastBrace !== -1 && firstBrace < lastBrace) {
     try {
-      // 提取可能的JSON部分
+      // Extract possible JSON part
       const jsonCandidate = paramStr.substring(firstBrace, lastBrace + 1);
 
-      // 处理转义的引号
+      // Handle escaped quotes
       const unescaped = jsonCandidate.replace(/\\"/g, '"');
 
       try {
         const result = JSON.parse(unescaped);
-        console.log("成功从流式数据中提取JSON:", result);
+        console.log("Successfully extracted JSON from streaming data:", result);
         return result;
       } catch (e) {
-        console.warn("从流式数据提取JSON失败，尝试其他方法:", e);
+        console.warn("Failed to extract JSON from streaming data, trying other methods:", e);
       }
     } catch (e) {
-      console.warn("流式数据处理失败:", e);
+      console.warn("Streaming data processing failed:", e);
     }
   }
 
-  // 处理特殊格式: " " {\"script\": \"...\"}"}"
+  // Handle special format: " " {\"script\": \"...\"}"}"
   if (paramStr.startsWith('" "') || paramStr.startsWith('" {')) {
     try {
-      // 移除开头的多余引号和空格
+      // Remove extra quotes and spaces at the beginning
       let cleaned = paramStr.replace(/^"\s+"/, "");
 
-      // 移除末尾多余的引号和花括号
+      // Remove extra quotes and braces at the end
       cleaned = cleaned.replace(/"}"+$/, "}");
 
-      // 处理转义的引号
+      // Handle escaped quotes
       cleaned = cleaned.replace(/\\"/g, '"');
 
       try {
         return JSON.parse(cleaned);
       } catch (e) {
-        console.warn("特殊格式JSON解析失败:", e);
+        console.warn("Special format JSON parsing failed:", e);
       }
     } catch (e) {
-      console.warn("特殊格式处理失败:", e);
+      console.warn("Special format processing failed:", e);
     }
   }
 
-  // 处理多层转义的JSON字符串
-  // 例如: " " \" {\\\"script\\\": \\\"setTimeout...\\\"}\"}""
+  // Handle multi-layer escaped JSON strings
+  // For example: " " \" {\\\"script\\\": \\\"setTimeout...\\\"}\"}""
   if (paramStr.includes('\\\\"')) {
     try {
-      // 逐步解除转义，一层一层处理
+      // Gradually remove escaping, process layer by layer
       let cleaned = paramStr;
 
-      // 去除开头的多余引号和空格
+      // Remove extra quotes and spaces at the beginning
       cleaned = cleaned.replace(/^["'\s]+/, "");
 
-      // 去除末尾多余的引号和花括号
+      // Remove extra quotes and braces at the end
       cleaned = cleaned.replace(/["'}]+$/, "");
 
-      // 修复可能的不完整JSON（缺少开始的花括号）
+      // Fix possible incomplete JSON (missing opening brace)
       if (!cleaned.startsWith("{") && cleaned.includes("{")) {
         cleaned = cleaned.substring(cleaned.indexOf("{"));
       }
 
-      // 处理双重转义 \\\" -> \"
+      // Handle double escaping \\\" -> \"
       cleaned = cleaned.replace(/\\\\"/g, '\\"');
 
-      // 处理单重转义 \" -> "
+      // Handle single escaping \" -> "
       cleaned = cleaned.replace(/\\"/g, '"');
 
       try {
         return JSON.parse(cleaned);
       } catch (e) {
-        console.warn("多层转义JSON解析失败，尝试其他方法", e);
+        console.warn("Multi-layer escaped JSON parsing failed, trying other methods", e);
       }
     } catch (e) {
-      console.warn("多层转义处理失败:", e);
+      console.warn("Multi-layer escaping processing failed:", e);
     }
   }
 
-  // 处理单层转义的JSON字符串
+  // Handle single-layer escaped JSON strings
   if (paramStr.includes('\\"')) {
     try {
-      // 对于 {\"destination\": \"/path/to/dir\", \"source\": \"/path/to/file\"}"} 这种格式
+      // For format like {\"destination\": \"/path/to/dir\", \"source\": \"/path/to/file\"}"}
       if (paramStr.endsWith('"}') || paramStr.endsWith('"}"}')) {
-        // 删除末尾多余的 "} 或 "}"
+        // Remove extra "} or "}"} at the end
         let cleaned = paramStr;
         while (cleaned.endsWith('"}')) {
           cleaned = cleaned.substring(0, cleaned.length - 1);
         }
 
-        // 替换所有的 \" 为 "
+        // Replace all \" with "
         cleaned = cleaned.replace(/\\"/g, '"');
 
         try {
           return JSON.parse(cleaned);
         } catch (e) {
-          console.warn("单层转义JSON解析失败:", e);
+          console.warn("Single-layer escaped JSON parsing failed:", e);
         }
       } else {
-        // 处理其他形式的单层转义
+        // Handle other forms of single-layer escaping
         let cleaned = paramStr;
 
-        // 如果字符串不是以 { 开头，但包含 {，则从 { 开始截取
+        // If string doesn't start with { but contains {, extract from {
         if (!cleaned.startsWith("{") && cleaned.includes("{")) {
           cleaned = cleaned.substring(cleaned.indexOf("{"));
         }
 
-        // 如果字符串不是以 } 结尾，但包含 }，则截取到最后一个 }
+        // If string doesn't end with } but contains }, extract to the last }
         if (!cleaned.endsWith("}") && cleaned.includes("}")) {
           cleaned = cleaned.substring(0, cleaned.lastIndexOf("}") + 1);
         }
 
-        // 替换所有的 \" 为 "
+        // Replace all \" with "
         cleaned = cleaned.replace(/\\"/g, '"');
 
         try {
           return JSON.parse(cleaned);
         } catch (e) {
-          console.warn("单层转义JSON解析失败(通用处理):", e);
+          console.warn("Single-layer escaped JSON parsing failed (general handling):", e);
         }
       }
     } catch (e) {
-      console.warn("单层转义处理失败:", e);
+      console.warn("Single-layer escaping processing failed:", e);
     }
   }
 
-  // 尝试处理引号包裹的JSON字符串
+  // Try to handle JSON strings wrapped in quotes
   if (paramStr.startsWith('"') && paramStr.endsWith('"')) {
     try {
-      // 去掉外层引号
+      // Remove outer quotes
       const unquoted = paramStr.substring(1, paramStr.length - 1);
-      // 处理内部转义
+      // Handle internal escaping
       const unescaped = unquoted.replace(/\\"/g, '"').replace(/\\\\/g, "\\");
       return JSON.parse(unescaped);
     } catch (e) {
-      console.warn("引号包裹JSON解析失败:", e);
+      console.warn("Quote-wrapped JSON parsing failed:", e);
     }
   }
 
-  // 如果特殊处理失败，回退到通用方法
+  // If special handling fails, fall back to general method
   return safeJsonParse(paramStr, {});
 };
 
 /**
- * 获取提供商适配器
- * @param {string} providerId 提供商 ID
- * @returns {Function} 适配器函数
+ * Get provider adapter
+ * @param {string} providerId Provider ID
+ * @returns {Function} Adapter function
  */
 export const getProviderAdapter = (providerId) => {
   switch (providerId) {
@@ -287,7 +287,7 @@ export const getProviderAdapter = (providerId) => {
     case "gemini":
       return import("../adapters/geminiAdapter.js").then((m) => m.default);
     default:
-      // 对于其他提供商，使用通用 OpenAI 兼容适配器
+      // For other providers, use general OpenAI compatible adapter
       return import("../adapters/baseAdapter.js").then((m) => m.default);
   }
 };

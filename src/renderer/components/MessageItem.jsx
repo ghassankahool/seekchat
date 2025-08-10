@@ -12,15 +12,15 @@ import { useTranslation } from "react-i18next";
 
 const { Panel } = Collapse;
 
-// 消息内容组件
+// Message content component
 const MessageContent = ({ content }) => {
   const { t } = useTranslation();
 
-  // 如果内容是字符串，尝试解析为 JSON
+  // If content is string, try to parse as JSON
   const parsedContent =
     typeof content === "string" ? parseMessageContent(content) : content;
 
-  // 复制代码到剪贴板
+  // Copy code to clipboard
   const copyCodeToClipboard = (code) => {
     navigator.clipboard
       .writeText(code)
@@ -28,23 +28,23 @@ const MessageContent = ({ content }) => {
         message.success(t("chat.codeCopied"));
       })
       .catch((error) => {
-        console.error("复制代码失败:", error);
+        console.error("Failed to copy code:", error);
         message.error(t("chat.copyToClipboard") + t("common.failed"));
       });
   };
 
-  // 处理链接点击事件，在外部浏览器中打开
+  // Handle link click events, open in external browser
   const handleLinkClick = (href, event) => {
     event.preventDefault();
 
-    // 使用electronAPI在浏览器中打开链接
+    // Use electronAPI to open link in browser
     window.electronAPI.openExternalURL(href).catch((err) => {
       console.error(t("about.openLinkFailed"), err);
       message.error(`${t("about.openLinkFailed")} ${err.message}`);
     });
   };
 
-  // 自定义渲染器，添加代码高亮功能
+  // Custom renderer, add code highlighting functionality
   const renderers = {
     code({ node, inline, className, children, ...props }) {
       const match = /language-(\w+)/.exec(className || "");
@@ -80,7 +80,7 @@ const MessageContent = ({ content }) => {
       );
     },
 
-    // 自定义链接渲染，设置为在外部浏览器打开
+    // Custom link rendering, set to open in external browser
     a({ node, href, children, ...props }) {
       return (
         <a
@@ -95,25 +95,25 @@ const MessageContent = ({ content }) => {
     },
   };
 
-  // 如果解析后是数组，渲染多个内容块
+  // If parsed result is array, render multiple content blocks
   if (Array.isArray(parsedContent)) {
-    // 找到主要内容（类型为 content）
+    // Find main content (type is content)
     const mainContent = parsedContent.find((item) => item.type === "content");
-    // 找到思考内容（类型为 reasoning_content）
+    // Find reasoning content (type is reasoning_content)
     const reasoningContent = parsedContent.find(
       (item) => item.type === "reasoning_content"
     );
-    // 找到工具调用内容（类型为 tool_calls）
+    // Find tool call content (type is tool_calls)
     const toolCallsContent = parsedContent.find(
       (item) => item.type === "tool_calls"
     );
 
-    // 导入MCP工具调用组件
+    // Import MCP tool call component
     const MCPToolCall = lazy(() => import("./MCPToolCall"));
 
     return (
       <div className="message-content-blocks">
-        {/* 思考内容（可折叠） - 移到主要内容之前 */}
+        {/* Reasoning content (collapsible) - moved before main content */}
         {reasoningContent &&
           reasoningContent.content &&
           reasoningContent.content !== "" && (
@@ -145,7 +145,7 @@ const MessageContent = ({ content }) => {
               </Panel>
             </Collapse>
           )}
-        {/* 工具调用内容 */}
+        {/* Tool call content */}
         {toolCallsContent &&
           toolCallsContent.content &&
           Array.isArray(toolCallsContent.content) && (
@@ -166,7 +166,7 @@ const MessageContent = ({ content }) => {
               ))}
             </div>
           )}
-        {/* 主要内容 - 移到思考内容之后 */}
+        {/* Main content - moved after reasoning content */}
         {mainContent && mainContent.status !== "error" && (
           <div className="message-main-content">
             <ReactMarkdown components={renderers}>
@@ -180,12 +180,12 @@ const MessageContent = ({ content }) => {
           </div>
         )}
 
-        {/* 错误内容 */}
+        {/* Error content */}
         {mainContent && mainContent.status === "error" && (
           <div className="message-error-content">{mainContent.content}</div>
         )}
 
-        {/* 如果没有内容，显示加载中 */}
+        {/* If no content, show loading */}
         {!mainContent && !reasoningContent && !toolCallsContent && (
           <Spin size="small" />
         )}
@@ -193,7 +193,7 @@ const MessageContent = ({ content }) => {
     );
   }
 
-  // 如果不是数组，直接渲染内容
+  // If not array, render content directly
   return (
     <ReactMarkdown components={renderers}>
       {typeof parsedContent === "string"
@@ -203,13 +203,13 @@ const MessageContent = ({ content }) => {
   );
 };
 
-// 复制到剪贴板函数
+// Copy to clipboard function
 const copyToClipboard = (content, t) => {
-  // 如果是字符串，尝试解析为JSON
+  // If is string, try to parse as JSON
   const parsedContent =
     typeof content === "string" ? parseMessageContent(content) : content;
 
-  // 找到主要内容
+  // Find main content
   let textToCopy = "";
   if (Array.isArray(parsedContent)) {
     const mainContent = parsedContent.find((item) => item.type === "content");
@@ -223,7 +223,7 @@ const copyToClipboard = (content, t) => {
         : formatMessageContent(parsedContent);
   }
 
-  // 复制到剪贴板
+  // Copy to clipboard
   try {
     navigator.clipboard.writeText(textToCopy);
     message.success(t("chat.copiedToClipboard"));
@@ -233,7 +233,7 @@ const copyToClipboard = (content, t) => {
       t("chat.copyToClipboard") + t("common.failed") + ":" + error.message
     );
 
-    // 回退方案：创建临时文本区域
+    // Fallback solution: create temporary text area
     try {
       const textArea = document.createElement("textarea");
       textArea.value = textToCopy;
@@ -254,12 +254,12 @@ const copyToClipboard = (content, t) => {
   }
 };
 
-// 使用memo包装消息项组件，避免不必要的重新渲染
+// Use memo wrapper for message item component to avoid unnecessary re-renders
 const MessageItem = memo(
   ({ message, getProviderAndModelInfo, onVisibilityChange }) => {
     const { t } = useTranslation();
 
-    // 获取当前消息的AI模型信息
+    // Get current message AI model information
     const modelInfo =
       message.role === "assistant" && message.providerId && message.modelId
         ? getProviderAndModelInfo(message.providerId, message.modelId)
@@ -270,9 +270,9 @@ const MessageItem = memo(
             providerId: "",
           };
 
-    // 处理元素进入视图
+    // Handle element entering view
     React.useEffect(() => {
-      // 如果提供了可见性变化回调，调用它
+      // If visibility change callback is provided, call it
       if (onVisibilityChange && typeof onVisibilityChange === "function") {
         const observer = new IntersectionObserver(
           ([entry]) => {
@@ -285,7 +285,7 @@ const MessageItem = memo(
           { threshold: 0.5 }
         );
 
-        // 当前组件的DOM引用
+        // Current component DOM reference
         const element = document.getElementById(`message-${message.id}`);
         if (element) {
           observer.observe(element);
@@ -378,24 +378,24 @@ const MessageItem = memo(
       </div>
     );
   },
-  // 自定义比较函数，只有当消息内容或状态发生变化时才重新渲染
+  // Custom comparison function, only re-render when message content or status changes
   (prevProps, nextProps) => {
-    // 检查ID是否相同
+    // Check if ID is the same
     if (prevProps.message.id !== nextProps.message.id) {
-      return false; // 不同消息，需要重新渲染
+      return false; // Different message, needs re-render
     }
 
-    // 检查状态是否变化
+    // Check if status changes
     if (prevProps.message.status !== nextProps.message.status) {
-      return false; // 状态变化，需要重新渲染
+      return false; // Status changed, needs re-render
     }
 
-    // 检查内容是否变化
+    // Check if content changes
     if (prevProps.message.content !== nextProps.message.content) {
-      return false; // 内容变化，需要重新渲染
+      return false; // Content changed, needs re-render
     }
 
-    // 其他属性没有变化，不需要重新渲染
+    // Other properties haven't changed, no need to re-render
     return true;
   }
 );

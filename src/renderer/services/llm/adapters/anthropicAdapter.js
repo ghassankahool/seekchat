@@ -1,20 +1,20 @@
 /**
- * Anthropic 适配器
- * 处理与Anthropic API的交互
+ * Anthropic adapter
+ * Handles interaction with Anthropic API
  */
 
 import baseOpenAICompatibleAdapter from "./baseAdapter.js";
 import i18n from "../../../i18n";
 
 /**
- * Anthropic 提供商适配器
- * @param {Array} messages 消息列表
- * @param {Object} provider 提供商配置
- * @param {Object} model 模型配置
- * @param {Function} onProgress 进度回调函数
- * @param {Function} onComplete 完成回调函数
- * @param {Object} options 选项参数
- * @returns {Promise} 响应
+ * Anthropic provider adapter
+ * @param {Array} messages Message list
+ * @param {Object} provider Provider configuration
+ * @param {Object} model Model configuration
+ * @param {Function} onProgress Progress callback function
+ * @param {Function} onComplete Complete callback function
+ * @param {Object} options Option parameters
+ * @returns {Promise} Response
  */
 const anthropicAdapter = async (
   messages,
@@ -24,13 +24,13 @@ const anthropicAdapter = async (
   onComplete,
   options = {}
 ) => {
-  // Anthropic使用不同的端点和请求格式
+  // Anthropic uses different endpoint and request format
   const adapterConfig = {
     endpoint: "/v1/messages",
 
-    // 请求体转换器
+    // Request body transformer
     requestTransformer: (requestBody, model, options) => {
-      // 转换格式为Anthropic兼容
+      // Convert format to Anthropic compatible
       const formattedMessages = messages.map((msg) => ({
         role: msg.role === "user" ? "user" : "assistant",
         content: msg.content,
@@ -44,7 +44,7 @@ const anthropicAdapter = async (
         stream: !!onProgress,
       };
 
-      // 添加工具支持
+      // Add tool support
       if (
         options.tools &&
         Array.isArray(options.tools) &&
@@ -56,7 +56,7 @@ const anthropicAdapter = async (
       return result;
     },
 
-    // 响应解析器
+    // Response parser
     responseParser: (data, model) => {
       const content =
         data.content && data.content.length > 0
@@ -71,7 +71,7 @@ const anthropicAdapter = async (
       };
     },
 
-    // 流处理器
+    // Stream processor
     streamProcessor: (data, content, reasoning_content, toolCalls) => {
       let hasUpdate = false;
 
@@ -83,12 +83,12 @@ const anthropicAdapter = async (
         content += data.delta.text;
         hasUpdate = true;
       } else if (data.type === "message_stop") {
-        // 消息结束
+        // Message end
       } else if (data.type === "tool_call_delta") {
-        // 处理工具调用更新
+        // Handle tool call updates
         const deltaToolCall = data.delta;
 
-        // 找到现有工具调用或创建新的
+        // Find existing tool call or create new one
         let existingToolCall = toolCalls.find(
           (tc) => tc.id === data.tool_call_id
         );
@@ -102,37 +102,37 @@ const anthropicAdapter = async (
           toolCalls.push(existingToolCall);
         }
 
-        // 更新函数信息
+        // Update function information
         if (deltaToolCall.name) {
           existingToolCall.function.name = deltaToolCall.name;
         }
 
-        // 处理不同形式的输入参数
+        // Handle different forms of input parameters
         if (deltaToolCall.input) {
-          // 如果是对象，直接序列化
+          // If it's an object, serialize directly
           if (typeof deltaToolCall.input === "object") {
             try {
               existingToolCall.function.arguments = JSON.stringify(
                 deltaToolCall.input
               );
             } catch (e) {
-              console.warn("序列化Anthropic工具输入失败:", e);
+              console.warn("Failed to serialize Anthropic tool input:", e);
               existingToolCall.function.arguments = "{}";
             }
           }
-          // 如果是字符串，可能已经是JSON或需要附加到现有参数
+          // If it's a string, it might already be JSON or need to be appended to existing parameters
           else if (typeof deltaToolCall.input === "string") {
-            // 清理可能包含的特殊token
+            // Clean possible special tokens
             let inputStr = deltaToolCall.input;
             if (inputStr.includes("<｜tool") || inputStr.includes("<|tool")) {
-              console.warn("Anthropic工具输入包含特殊token:", inputStr);
+              console.warn("Anthropic tool input contains special tokens:", inputStr);
               const tokenMatch = inputStr.match(/<[｜|]tool[^>]*>/);
               if (tokenMatch) {
                 inputStr = inputStr.substring(tokenMatch[0].length);
               }
             }
 
-            // 追加到现有参数
+            // Append to existing parameters
             existingToolCall.function.arguments += inputStr;
           }
         }

@@ -3,30 +3,30 @@ const {
 } = require("@modelcontextprotocol/sdk/client/stdio.js");
 const { Client } = require("@modelcontextprotocol/sdk/client/index.js");
 const logger = require("../logger");
-// SSEClientTransport 无法使用require，否则会报错"ERR_REQUIRE_ASYNC_MODULE"，改为动态import的方式
-// 在文件顶部添加
+// SSEClientTransport cannot use require, otherwise will throw "ERR_REQUIRE_ASYNC_MODULE" error, changed to dynamic import approach
+// Added at the top of the file
 const os = require("os");
 const path = require("path");
 
-// 判断操作系统类型
+// Determine operating system type
 const isMac = process.platform === "darwin";
 const isLinux = process.platform === "linux";
 const isWin = process.platform === "win32";
 
 /**
- * 获取增强的PATH环境变量，包含常见工具位置
- * @param {string} originalPath 原始PATH环境变量
- * @returns {string} 增强后的PATH环境变量
+ * Get enhanced PATH environment variable, including common tool locations
+ * @param {string} originalPath Original PATH environment variable
+ * @returns {string} Enhanced PATH environment variable
  */
 const getEnhancedPath = (originalPath) => {
-  // 将原始 PATH 按分隔符分割成数组
+  // Split the original PATH by separator into an array
   const pathSeparator = process.platform === "win32" ? ";" : ":";
   const existingPaths = new Set(
     originalPath.split(pathSeparator).filter(Boolean)
   );
   const homeDir = process.env.HOME || process.env.USERPROFILE || "";
 
-  // 定义要添加的新路径
+  // Define new paths to add
   const newPaths = [];
 
   if (isMac) {
@@ -67,50 +67,50 @@ const getEnhancedPath = (originalPath) => {
     );
   }
 
-  // 添加应用内部的node_modules/.bin目录
+  // Add application internal node_modules/.bin directory
   newPaths.push(path.join(__dirname, "..", "..", "node_modules", ".bin"));
 
-  // 只添加不存在的路径
+  // Only add paths that don't exist
   newPaths.forEach((p) => {
     if (p && !existingPaths.has(p)) {
       existingPaths.add(p);
     }
   });
 
-  // 转换回字符串
+  // Convert back to string
   return Array.from(existingPaths).join(pathSeparator);
 };
-// 数据库实例将通过全局引用获取
+// Database instance will be obtained through global reference
 let _db = null;
 
-// 客户端连接池，用于管理所有MCP客户端实例
+// Client connection pool for managing all MCP client instances
 const clientPool = new Map();
 
 /**
- * 获取或创建MCP客户端
- * @param {string} serverId 服务器ID
- * @returns {Promise<Client>} MCP客户端实例
+ * Get or create MCP client
+ * @param {string} serverId Server ID
+ * @returns {Promise<Client>} MCP client instance
  */
 async function getOrCreateClient(serverId) {
-  // 检查池中是否已有此服务器的客户端且连接正常
+  // Check if there's already a client for this server in the pool and connection is normal
   if (clientPool.has(serverId) && clientPool.get(serverId).isConnected) {
-    logger.info(`使用现有MCP客户端连接: ${serverId}`);
+    logger.info(`Using existing MCP client connection: ${serverId}`);
     return clientPool.get(serverId).client;
   }
 
   try {
-    // 获取服务器信息
+    // Get server information
     const server = await _db.getMCPServerById(serverId);
     if (!server) {
-      throw new Error(`找不到ID为${serverId}的MCP服务器`);
+      throw new Error(`Cannot find MCP server with ID ${serverId}`);
     }
 
-    logger.info(`为服务器 ${server.name} 创建新MCP客户端连接`);
+    logger.info(`Creating new MCP client connection for server ${server.name}`);
 
-    // 创建客户端
+    // Create client
     const client = await createMCPClient(server);
 
-    // 存储到池中
+    // Store in pool
     clientPool.set(serverId, {
       client,
       isConnected: true,
@@ -120,17 +120,17 @@ async function getOrCreateClient(serverId) {
 
     return client;
   } catch (error) {
-    logger.error(`获取或创建MCP客户端失败: ${error.message}`, error);
+    logger.error(`Failed to get or create MCP client: ${error.message}`, error);
     throw error;
   }
 }
 
 /**
- * 创建MCP客户端
- * @param {Object} serverData 服务器数据
- * @param {number} retryCount 重试次数
- * @param {number} retryDelay 重试延迟(毫秒)
- * @returns {Promise<Client>} MCP客户端实例
+ * Create MCP client
+ * @param {Object} serverData Server data
+ * @param {number} retryCount Retry count
+ * @param {number} retryDelay Retry delay (milliseconds)
+ * @returns {Promise<Client>} MCP client instance
  */
 const createMCPClient = async (
   serverData,
@@ -141,15 +141,15 @@ const createMCPClient = async (
 
   for (let attempt = 1; attempt <= retryCount; attempt++) {
     try {
-      logger.info(`尝试创建MCP客户端 (${attempt}/${retryCount})...`);
+      logger.info(`Attempting to create MCP client (${attempt}/${retryCount})...`);
 
-      // 创建客户端配置
+      // Create client configuration
       const clientConfig = {
         name: "seekchat-client",
         version: "1.0.0",
       };
 
-      // 创建客户端能力设置
+      // Create client capability settings
       const clientCapabilities = {
         capabilities: {
           tools: {},
@@ -158,10 +158,10 @@ const createMCPClient = async (
         },
       };
 
-      // 创建客户端
+      // Create client
       const client = new Client(clientConfig, clientCapabilities);
 
-      // 添加错误处理，以防连接关闭或错误
+      // Add error handling to prevent connection close or errors
       client.on =
         client.on ||
         function (event, handler) {
@@ -174,18 +174,18 @@ const createMCPClient = async (
           }
         };
 
-      // 根据服务器类型创建不同的传输
+      // Create different transports based on server type
       let transport;
-      const connectionTimeout = 15000; // 15秒连接超时
+      const connectionTimeout = 15000; // 15 second connection timeout
 
       if (serverData.type === "stdio") {
-        // 解析命令行和参数
+        // Parse command line and arguments
         const urlParts = serverData.url.split(" ");
         const command = urlParts[0];
         const args = urlParts.slice(1);
 
         logger.info(
-          `创建stdio传输: 命令=${command}, 参数=${JSON.stringify(args)}`
+          `Creating stdio transport: command=${command}, args=${JSON.stringify(args)}`
         );
         const mergedEnv = {
           ...serverData.env,
@@ -193,7 +193,7 @@ const createMCPClient = async (
         };
         logger.info(`mergedEnv: ${JSON.stringify(mergedEnv)}`);
 
-        // 创建stdio传输
+        // Create stdio transport
         transport = new StdioClientTransport({
           command,
           args,
@@ -202,161 +202,161 @@ const createMCPClient = async (
           timeout: connectionTimeout,
         });
       } else if (serverData.type === "sse") {
-        logger.info(`创建SSE传输: URL=${serverData.url}`);
+        logger.info(`Creating SSE transport: URL=${serverData.url}`);
 
-        // 动态导入SSEClientTransport
+        // Dynamically import SSEClientTransport
         const { SSEClientTransport } = await import(
           "@modelcontextprotocol/sdk/client/sse.js"
         );
 
-        // 创建SSE传输 - 不再使用apiKey
+        // Create SSE transport - no longer use apiKey
         transport = new SSEClientTransport(new URL(serverData.url));
       } else {
-        throw new Error(`不支持的MCP服务器类型: ${serverData.type}`);
+        throw new Error(`Unsupported MCP server type: ${serverData.type}`);
       }
 
-      // 连接客户端
+      // Connect client
       await client.connect(transport);
 
-      // 为client添加处理连接关闭的功能
+      // Add connection close handling functionality to client
       const originalDisconnect = client.disconnect;
       client.disconnect = async function () {
         try {
-          logger.info(`正在断开MCP客户端连接: ${serverData.name || "unknown"}`);
+          logger.info(`Disconnecting MCP client connection: ${serverData.name || "unknown"}`);
 
           if (this._onCloseHandlers) {
             for (const handler of this._onCloseHandlers) {
               try {
                 handler();
               } catch (e) {
-                logger.warn(`调用连接关闭处理函数失败: ${e.message}`);
+                logger.warn(`Failed to call connection close handler: ${e.message}`);
               }
             }
           }
 
-          // 检查originalDisconnect是否存在再调用
+          // Check if originalDisconnect exists before calling
           if (typeof originalDisconnect === "function") {
             await originalDisconnect.call(this);
           } else {
-            // 如果原始断开方法不存在，通过transport直接断开
+            // If original disconnect method doesn't exist, disconnect directly through transport
             if (
               this.transport &&
               typeof this.transport.disconnect === "function"
             ) {
               await this.transport.disconnect();
             }
-            // 如果都不存在，标记为已断开状态
+            // If neither exists, mark as disconnected state
             if (this._isConnected !== undefined) {
               this._isConnected = false;
             }
           }
 
-          logger.info(`MCP客户端已成功断开: ${serverData.name || "unknown"}`);
+          logger.info(`MCP client successfully disconnected: ${serverData.name || "unknown"}`);
           return true;
         } catch (error) {
-          logger.error(`断开MCP客户端连接失败: ${error.message}`);
+          logger.error(`Failed to disconnect MCP client connection: ${error.message}`);
           return false;
         }
       };
 
-      logger.info(`MCP客户端创建成功: ${serverData.name}`);
+      logger.info(`MCP client created successfully: ${serverData.name}`);
       return client;
     } catch (error) {
       lastError = error;
       logger.warn(
-        `创建MCP客户端失败(尝试 ${attempt}/${retryCount}): ${error.message}`
+        `Failed to create MCP client (attempt ${attempt}/${retryCount}): ${error.message}`
       );
 
       if (attempt < retryCount) {
-        // 等待一段时间后重试
+        // Wait for a while before retrying
         await new Promise((resolve) => setTimeout(resolve, retryDelay));
-        // 逐渐增加重试延迟
-        retryDelay = Math.min(retryDelay * 1.5, 10000); // 最多10秒
+        // Gradually increase retry delay
+        retryDelay = Math.min(retryDelay * 1.5, 10000); // Maximum 10 seconds
       }
     }
   }
 
-  // 所有重试都失败
+  // All retries failed
   logger.error(
-    `创建MCP客户端失败，已重试${retryCount}次: ${lastError.message}`
+    `Failed to create MCP client after ${retryCount} retries: ${lastError.message}`
   );
   throw lastError;
 };
 
 /**
- * 执行MCP工具
- * @param {string} serverId 服务器ID
- * @param {string} toolId 工具ID
- * @param {Object|string} parameters 工具参数
- * @returns {Promise<Object>} 执行结果
+ * Execute MCP tool
+ * @param {string} serverId Server ID
+ * @param {string} toolId Tool ID
+ * @param {Object|string} parameters Tool parameters
+ * @returns {Promise<Object>} Execution result
  */
 const executeTool = async (serverId, toolId, parameters, retryCount = 1) => {
   let client = null;
 
   try {
     if (!_db) {
-      throw new Error("数据库未初始化");
+      throw new Error("Database not initialized");
     }
 
-    // 获取服务器信息
+    // Get server information
     const server = await _db.getMCPServerById(serverId);
     if (!server) {
-      throw new Error(`找不到ID为${serverId}的MCP服务器`);
+      throw new Error(`Cannot find MCP server with ID ${serverId}`);
     }
 
-    // 检查服务器是否激活
+    // Check if server is active
     if (!server.active) {
-      throw new Error(`MCP服务器'${server.name}'未激活`);
+      throw new Error(`MCP server '${server.name}' is not active`);
     }
 
     try {
-      // 获取或创建客户端
+      // Get or create client
       client = await getOrCreateClient(serverId);
 
-      // 确保参数是一个对象
+      // Ensure parameters is an object
       const parsedParameters =
         typeof parameters === "string"
           ? JSON.parse(parameters)
           : parameters || {};
 
       logger.info(
-        `准备执行工具 ${toolId}，参数:`,
+        `Preparing to execute tool ${toolId}, parameters:`,
         JSON.stringify(parsedParameters).substring(0, 200) +
           (JSON.stringify(parsedParameters).length > 200 ? "..." : "")
       );
 
-      // 获取工具列表以检查参数格式
+      // Get tool list to check parameter format
       const toolsList = await client.listTools();
       const toolInfo = toolsList.tools.find((tool) => tool.name === toolId);
 
       if (!toolInfo) {
-        throw new Error(`工具 ${toolId} 不存在`);
+        throw new Error(`Tool ${toolId} does not exist`);
       }
 
-      // 执行工具
+      // Execute tool
       const result = await client.callTool({
         name: toolId,
         arguments: parsedParameters,
       });
 
-      logger.info(`工具 ${toolId} 执行成功`);
+      logger.info(`Tool ${toolId} executed successfully`);
 
-      // 更新最后使用时间
+      // Update last used time
       if (clientPool.has(serverId)) {
         clientPool.get(serverId).lastUsed = Date.now();
       }
 
       return {
         success: true,
-        message: "工具执行成功",
+        message: "Tool execution successful",
         result: result,
       };
     } catch (error) {
-      // 如果是连接错误并且还有重试次数，尝试重新创建连接
+      // If it's a connection error and there are retry attempts left, try to recreate connection
       if (error.message.includes("Connection") && retryCount > 0) {
-        logger.warn(`MCP连接错误，尝试重新连接: ${error.message}`);
+        logger.warn(`MCP connection error, attempting to reconnect: ${error.message}`);
 
-        // 如果客户端连接存在，尝试断开
+        // If client connection exists, try to disconnect
         if (clientPool.has(serverId)) {
           const poolEntry = clientPool.get(serverId);
           if (
@@ -366,60 +366,60 @@ const executeTool = async (serverId, toolId, parameters, retryCount = 1) => {
             try {
               await poolEntry.client.disconnect();
             } catch (e) {
-              logger.warn(`断开旧连接失败: ${e.message}`);
+              logger.warn(`Failed to disconnect old connection: ${e.message}`);
             }
           }
 
-          // 标记为断开状态
+          // Mark as disconnected state
           poolEntry.isConnected = false;
         }
 
-        // 移除旧连接
+        // Remove old connection
         clientPool.delete(serverId);
 
-        // 重新执行工具调用
+        // Re-execute tool call
         return executeTool(serverId, toolId, parameters, retryCount - 1);
       }
 
-      logger.error(`执行工具 ${toolId} 失败: ${error.message}`);
+      logger.error(`Failed to execute tool ${toolId}: ${error.message}`);
       return {
         success: false,
-        message: `执行工具失败: ${error.message}`,
+        message: `Tool execution failed: ${error.message}`,
         result: null,
       };
     }
   } catch (error) {
-    logger.error(`执行MCP工具失败: ${error.message}`);
+    logger.error(`Failed to execute MCP tool: ${error.message}`);
     return {
       success: false,
-      message: `执行工具失败: ${error.message}`,
+      message: `Tool execution failed: ${error.message}`,
       result: null,
     };
   }
 };
 
 /**
- * 设置客户端池定期清理
+ * Set up client pool periodic cleanup
  */
 function setupClientPoolCleanup() {
-  const CLEANUP_INTERVAL = 5 * 60 * 1000; // 5分钟
-  const IDLE_TIMEOUT = 15 * 60 * 1000; // 15分钟未使用则关闭
+  const CLEANUP_INTERVAL = 5 * 60 * 1000; // 5 minutes
+  const IDLE_TIMEOUT = 15 * 60 * 1000; // Close after 15 minutes of no use
 
   setInterval(async () => {
     const now = Date.now();
     const poolEntries = Array.from(clientPool.entries());
 
-    logger.debug(`开始清理MCP客户端连接池，当前连接数: ${poolEntries.length}`);
+    logger.debug(`Starting cleanup of MCP client connection pool, current connections: ${poolEntries.length}`);
 
     for (const [serverId, value] of poolEntries) {
       if (now - value.lastUsed > IDLE_TIMEOUT) {
-        logger.info(`关闭空闲的MCP客户端连接: ${serverId}`);
+        logger.info(`Closing idle MCP client connection: ${serverId}`);
 
         if (value.client && typeof value.client.disconnect === "function") {
           try {
             await value.client.disconnect();
           } catch (e) {
-            logger.warn(`关闭MCP客户端连接失败: ${e.message}`);
+            logger.warn(`Failed to close MCP client connection: ${e.message}`);
           }
         }
 
@@ -430,11 +430,11 @@ function setupClientPoolCleanup() {
 }
 
 /**
- * 清理所有客户端连接
- * @returns {Promise<Object>} 清理结果
+ * Clean up all client connections
+ * @returns {Promise<Object>} Cleanup result
  */
 const cleanup = async () => {
-  logger.info("清理所有MCP客户端连接");
+  logger.info("Cleaning up all MCP client connections");
 
   const disconnectPromises = [];
 
@@ -443,11 +443,11 @@ const cleanup = async () => {
       disconnectPromises.push(
         (async () => {
           try {
-            logger.info(`断开MCP客户端连接: ${serverId}`);
+            logger.info(`Disconnecting MCP client connection: ${serverId}`);
             await value.client.disconnect();
             return true;
           } catch (e) {
-            logger.warn(`断开MCP客户端连接失败: ${e.message}`);
+            logger.warn(`Failed to disconnect MCP client connection: ${e.message}`);
             return false;
           }
         })()
@@ -455,48 +455,48 @@ const cleanup = async () => {
     }
   }
 
-  // 等待所有断开连接操作完成
+  // Wait for all disconnect operations to complete
   if (disconnectPromises.length > 0) {
     await Promise.allSettled(disconnectPromises);
   }
 
-  // 清空客户端池
+  // Clear client pool
   clientPool.clear();
 
   return { success: true };
 };
 
 /**
- * 测试MCP服务器连接
- * @param {Object} serverData 服务器数据
- * @returns {Promise<Object>} 测试结果
+ * Test MCP server connection
+ * @param {Object} serverData Server data
+ * @returns {Promise<Object>} Test result
  */
 const testMCPConnection = async (serverData) => {
   try {
-    // 基本URL验证
+    // Basic URL validation
     if (
       serverData.type === "sse" &&
       (!serverData.url || !serverData.url.startsWith("http"))
     ) {
       return {
         success: false,
-        message: "无效的URL格式",
+        message: "Invalid URL format",
         tools: [],
       };
     }
 
     let client = null;
     try {
-      // 创建MCP客户端
+      // Create MCP client
       client = await createMCPClient(serverData);
 
-      // 获取工具列表
+      // Get tool list
       const tools = await client.listTools();
-      logger.info("获取到的MCP工具列表:", tools);
+      logger.info("Retrieved MCP tool list:", tools);
 
-      // 格式化工具列表，确保参数格式正确
+      // Format tool list, ensure parameter format is correct
       const formattedTools = tools.tools.map((tool) => {
-        logger.info(`处理工具 ${tool.name} 的定义`);
+        logger.info(`Processing tool ${tool.name} definition`);
         return {
           id: tool.name,
           name: tool.name,
@@ -505,81 +505,81 @@ const testMCPConnection = async (serverData) => {
         };
       });
 
-      // 如果有服务器ID，更新服务器的工具信息
+      // If there's a server ID, update the server's tool information
       if (serverData.id && _db) {
         await _db.updateMCPServerTools(serverData.id, formattedTools);
       }
 
       return {
         success: true,
-        message: "连接成功",
+        message: "Connection successful",
         tools: formattedTools,
       };
     } catch (error) {
-      logger.error(`列出工具失败: ${error.message}`);
+      logger.error(`Failed to list tools: ${error.message}`);
       return {
         success: false,
-        message: `列出工具失败: ${error.message}`,
+        message: `Failed to list tools: ${error.message}`,
         tools: [],
       };
     } finally {
-      // 关闭客户端连接
+      // Close client connection
       if (client && client.disconnect) {
         try {
           await client.disconnect();
         } catch (e) {
-          logger.error(`关闭MCP客户端连接失败: ${e.message}`);
+          logger.error(`Failed to close MCP client connection: ${e.message}`);
         }
       }
     }
   } catch (error) {
-    logger.error(`测试MCP连接失败: ${error.message}`);
+    logger.error(`Failed to test MCP connection: ${error.message}`);
     return {
       success: false,
-      message: `连接失败: ${error.message}`,
+      message: `Connection failed: ${error.message}`,
       tools: [],
     };
   }
 };
 
 /**
- * 初始化MCP模块
- * @param {Object} db 数据库实例
+ * Initialize MCP module
+ * @param {Object} db Database instance
  */
 const initMCP = (db) => {
-  // 防止重复初始化
+  // Prevent duplicate initialization
   if (_db) {
-    logger.warn("MCP服务已初始化，忽略重复调用");
+    logger.warn("MCP service already initialized, ignoring duplicate call");
     return;
   }
 
   _db = db;
 
-  // 启动客户端池清理
+  // Start client pool cleanup
   setupClientPoolCleanup();
 
-  // 注册进程退出时的清理函数
+  // Register cleanup function for process exit
   process.on("exit", () => {
     try {
-      // 在进程退出时不能使用异步函数，直接同步清理
-      logger.info("进程退出，同步清理MCP连接");
+      // Cannot use async functions during process exit, directly clean up synchronously
+      logger.info("Process exiting, synchronously cleaning up MCP connections");
       Array.from(clientPool.values()).forEach((value) => {
         if (value.client && typeof value.client.disconnect === "function") {
           try {
-            // 调用断开连接，但不等待结果
+            // Call disconnect but don't wait for result
             value.client.disconnect().catch(() => {});
           } catch (e) {
-            // 忽略错误
+            // Ignore errors
           }
         }
       });
       clientPool.clear();
     } catch (e) {
-      logger.error("退出时清理MCP连接失败:", e);
+      logger.error("Failed to clean up MCP connections on exit:", e);
     }
   });
 
-  logger.info("MCP服务初始化完成");
+  logger.info("MCP service initialization completed");
 };
 
 module.exports = {

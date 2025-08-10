@@ -10,22 +10,22 @@ const isDev = process.env.NODE_ENV === "development";
 let db;
 let mainWindow;
 
-// 捕获全局未处理异常
+// Catch global unhandled exceptions
 logger.catchErrors();
 
-// 确保数据库已初始化
+// Ensure database is initialized
 function ensureDatabase() {
   if (!db) {
-    logger.info("初始化数据库...");
+    logger.info("Initializing database...");
     try {
       db = new ChatDatabase();
-      logger.info("数据库初始化成功");
+      logger.info("Database initialization successful");
     } catch (err) {
-      logger.error("数据库初始化失败:", err);
+      logger.error("Database initialization failed:", err);
       if (mainWindow) {
         mainWindow.webContents.send(
           "db-error",
-          "数据库初始化失败: " + err.message
+          "Database initialization failed: " + err.message
         );
       }
     }
@@ -34,7 +34,7 @@ function ensureDatabase() {
 }
 
 function createWindow() {
-  // 创建浏览器窗口
+  // Create browser window
   mainWindow = new BrowserWindow({
     width: 1200,
     height: 800,
@@ -52,32 +52,32 @@ function createWindow() {
 
   Menu.setApplicationMenu(null);
 
-  // 监听页面开始加载事件（刷新或导航）
+  // Listen for page start loading events (refresh or navigation)
   mainWindow.webContents.on("did-start-loading", () => {
-    logger.info("页面开始加载，检查是否有pending状态的消息");
+    logger.info("Page started loading, checking for pending status messages");
     const database = ensureDatabase();
     if (database) {
       database
         .updateAllPendingMessagesToError()
         .then((result) => {
           if (result.updatedCount > 0) {
-            logger.info(`页面刷新时处理了 ${result.updatedCount} 条中断的消息`);
+            logger.info(`Handled ${result.updatedCount} interrupted messages during page refresh`);
           }
         })
         .catch((err) => {
-          logger.error("更新中断消息状态失败:", err);
+          logger.error("Failed to update interrupted message status:", err);
         });
     }
   });
 
-  // 加载应用
+  // Load application
   if (isDev) {
-    // 开发环境下，加载Vite开发服务器
+    // In development environment, load Vite dev server
     mainWindow.loadURL("http://localhost:5173");
-    // 打开开发者工具
+    // Open developer tools
     mainWindow.webContents.openDevTools();
   } else {
-    // 生产环境下，加载打包后的index.html
+    // In production environment, load packaged index.html
     mainWindow.loadFile(path.join(__dirname, "../../dist/index.html"));
   }
 
@@ -86,62 +86,62 @@ function createWindow() {
   });
 }
 
-// 当Electron完成初始化并准备创建浏览器窗口时调用此方法
+// Called when Electron has finished initialization and is ready to create browser windows
 app.whenReady().then(() => {
-  logger.info("应用启动...");
+  logger.info("Application starting...");
   createWindow();
 
-  // 处理打开外部链接的请求
+  // Handle requests to open external links
   ipcMain.handle("open-external-url", async (event, url) => {
     try {
       await shell.openExternal(url);
       return { success: true };
     } catch (error) {
-      logger.error("打开外部链接失败:", error);
+      logger.error("Failed to open external link:", error);
       return { success: false, error: error.message };
     }
   });
 
-  // 确保数据库已初始化
+  // Ensure database is initialized
   const database = ensureDatabase();
 
-  // 更新所有pending状态的消息为error状态
+  // Update all pending status messages to error status
   if (database) {
     database
       .updateAllPendingMessagesToError()
       .then((result) => {
-        logger.info(`应用启动时处理了 ${result.updatedCount} 条中断的消息`);
+        logger.info(`Handled ${result.updatedCount} interrupted messages on app startup`);
       })
       .catch((err) => {
-        logger.error("更新中断消息状态失败:", err);
+        logger.error("Failed to update interrupted message status:", err);
       });
   }
 
-  // 注册所有IPC处理程序
+  // Register all IPC handlers
   registerIpcHandlers(database)
     .then(() => {
-      logger.info("IPC处理程序注册成功");
+      logger.info("IPC handlers registered successfully");
     })
     .catch((error) => {
-      logger.error("注册IPC处理程序失败:", error);
+      logger.error("Failed to register IPC handlers:", error);
     });
 
   app.on("activate", function () {
-    // 在macOS上，当点击dock图标并且没有其他窗口打开时，
-    // 通常在应用程序中重新创建一个窗口。
+    // On macOS, when dock icon is clicked and no other windows are open,
+    // it's common to re-create a window in the app.
     if (BrowserWindow.getAllWindows().length === 0) createWindow();
   });
 });
 
-// 当所有窗口关闭时退出应用
+// Quit when all windows are closed
 app.on("window-all-closed", function () {
   if (process.platform !== "darwin") app.quit();
 });
 
-// 应用退出前关闭数据库连接
+// Close database connection before app exit
 app.on("will-quit", () => {
   if (db) {
-    logger.info("应用退出，关闭数据库连接");
+    logger.info("Application exiting, closing database connection");
     db.close();
   }
   cleanup();

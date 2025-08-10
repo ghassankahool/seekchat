@@ -41,10 +41,10 @@ const ProviderSettings = ({
   const [isEditModelModalVisible, setIsEditModelModalVisible] = useState(false);
   const [currentEditModel, setCurrentEditModel] = useState(null);
 
-  // 初始化表单和状态
+  // Initialize form and state
   useEffect(() => {
     if (initialProvider) {
-      // 确保过滤掉已删除的模型
+      // Ensure to filter out deleted models
       const filteredProvider = {
         ...initialProvider,
         models: initialProvider.models.filter((model) => !model.deleted),
@@ -52,7 +52,7 @@ const ProviderSettings = ({
 
       setSelectedProvider(filteredProvider);
 
-      // 设置表单初始值
+      // Set form initial values
       form.setFieldsValue({
         apiKey: initialProvider.apiKey || "",
         baseUrl: initialProvider.baseUrl || "",
@@ -67,7 +67,7 @@ const ProviderSettings = ({
   const handleModelChange = (modelId, enabled) => {
     if (!selectedProvider) return;
 
-    // 使用providerService启用/禁用模型
+    // Use providerService to enable/disable model
     const result = providerService.enableModel(
       selectedProvider.id,
       modelId,
@@ -75,7 +75,7 @@ const ProviderSettings = ({
     );
 
     if (result.success) {
-      // 更新本地状态
+      // Update local state
       const updatedModels = selectedProvider.models.map((model) => {
         if (model.id === modelId) {
           return { ...model, enabled };
@@ -83,14 +83,14 @@ const ProviderSettings = ({
         return model;
       });
 
-      // 更新提供商状态
+      // Update provider state
       const updatedProvider = {
         ...selectedProvider,
         models: updatedModels,
       };
       setSelectedProvider(updatedProvider);
 
-      // 通知父组件更新
+      // Notify parent component to update
       if (onProviderUpdate) {
         onProviderUpdate(updatedProvider);
       }
@@ -99,13 +99,13 @@ const ProviderSettings = ({
     }
   };
 
-  // 显示添加模型对话框
+  // Show add model dialog
   const showAddModelModal = () => {
     setIsAddModelModalVisible(true);
     modelForm.resetFields();
   };
 
-  // 显示编辑模型对话框
+  // Show edit model dialog
   const showEditModelModal = (model) => {
     setCurrentEditModel(model);
     setIsEditModelModalVisible(true);
@@ -115,12 +115,12 @@ const ProviderSettings = ({
     });
   };
 
-  // 处理添加模型
+  // Handle add model
   const handleAddModel = async () => {
     try {
       const values = await modelForm.validateFields();
 
-      // 使用providerService添加模型
+      // Use providerService to add model
       const result = providerService.addModel(selectedProvider.id, {
         id: values.modelId,
         name: values.modelName || values.modelId,
@@ -128,13 +128,13 @@ const ProviderSettings = ({
       });
 
       if (result.success) {
-        // 更新当前提供商
+        // Update current provider
         const updatedProvider = providerService.getProviderById(
           selectedProvider.id
         );
         setSelectedProvider(updatedProvider);
 
-        // 通知父组件更新
+        // Notify parent component to update
         if (onProviderUpdate) {
           onProviderUpdate(updatedProvider);
         }
@@ -145,19 +145,19 @@ const ProviderSettings = ({
         message.error(result.message || t("settings.addModelFailed"));
       }
     } catch (error) {
-      console.error("添加模型失败:", error);
+      console.error("Failed to add model:", error);
       message.error(t("settings.addModelFailed"));
     }
   };
 
-  // 处理编辑模型
+  // Handle edit model
   const handleEditModel = async () => {
     if (!currentEditModel) return;
 
     try {
       const values = await modelForm.validateFields();
 
-      // 使用providerService编辑模型
+      // Use providerService to edit model
       const result = providerService.editModel(
         selectedProvider.id,
         currentEditModel.id,
@@ -168,13 +168,13 @@ const ProviderSettings = ({
       );
 
       if (result.success) {
-        // 更新当前提供商
+        // Update current provider
         const updatedProvider = providerService.getProviderById(
           selectedProvider.id
         );
         setSelectedProvider(updatedProvider);
 
-        // 通知父组件更新
+        // Notify parent component to update
         if (onProviderUpdate) {
           onProviderUpdate(updatedProvider);
         }
@@ -186,26 +186,26 @@ const ProviderSettings = ({
         message.error(result.message || t("settings.editModelFailed"));
       }
     } catch (error) {
-      console.error("编辑模型失败:", error);
+      console.error("Failed to edit model:", error);
       message.error(t("settings.editModelFailed"));
     }
   };
 
-  // 处理删除模型
+  // Handle delete model
   const handleDeleteModel = (modelId) => {
     if (!selectedProvider) return;
 
-    // 使用providerService删除模型
+    // Use providerService to delete model
     const result = providerService.deleteModel(selectedProvider.id, modelId);
 
     if (result.success) {
-      // 重新获取提供商以确保数据一致性
+      // Re-fetch provider to ensure data consistency
       const updatedProvider = providerService.getProviderById(
         selectedProvider.id
       );
       setSelectedProvider(updatedProvider);
 
-      // 通知父组件更新
+      // Notify parent component to update
       if (onProviderUpdate) {
         onProviderUpdate(updatedProvider);
       }
@@ -216,49 +216,49 @@ const ProviderSettings = ({
     }
   };
 
-  // 处理删除提供商
+  // Handle delete provider
   const handleDeleteProvider = () => {
     if (!selectedProvider || !selectedProvider.isCustom) {
       message.error(t("settings.cannotDeleteSystemProvider"));
       return;
     }
 
-    // 使用providerService删除提供商
+    // Use providerService to delete provider
     const result = providerService.deleteProvider(selectedProvider.id);
 
     if (result.success) {
-      // 通知父组件更新
+      // Notify parent component to update
       if (onProviderUpdate) {
-        // 传递null表示提供商已被删除
+        // Pass null to indicate provider has been deleted
         onProviderUpdate(null);
       }
 
       message.success(t("settings.deleteProviderSuccess"));
 
-      // 返回列表页面
+      // Return to list page
       handleMenuSelect({ key: "model-services" });
     } else {
       message.error(result.message || t("settings.deleteProviderFailed"));
     }
   };
 
-  // 处理保存提供商设置
+  // Handle save provider settings
   const handleSaveProvider = () => {
     if (!selectedProvider) {
-      console.error("无法保存：selectedProvider为空");
+      console.error("Cannot save: selectedProvider is null");
       return;
     }
 
     form
       .validateFields()
       .then((values) => {
-        // 使用providerService保存提供商设置
+        // Use providerService to save provider settings
         const result = providerService.saveProviderSettings(
           selectedProvider.id,
           {
             apiKey: values.apiKey || "",
             baseUrl: values.baseUrl || "",
-            // 如果是自定义提供商，保存isCustom标志和名称
+            // If it's a custom provider, save isCustom flag and name
             ...(selectedProvider.isCustom
               ? {
                   isCustom: true,
@@ -269,7 +269,7 @@ const ProviderSettings = ({
         );
 
         if (result.success) {
-          // 更新状态
+          // Update state
           const updatedProvider = {
             ...selectedProvider,
             apiKey: values.apiKey,
@@ -277,30 +277,30 @@ const ProviderSettings = ({
           };
           setSelectedProvider(updatedProvider);
 
-          // 通知父组件更新
+          // Notify parent component to update
           if (onProviderUpdate) {
             onProviderUpdate(updatedProvider);
           }
 
           message.success(t("settings.saveSuccess"));
 
-          // 返回列表页面
+          // Return to list page
           handleMenuSelect({ key: "model-services" });
         } else {
           message.error(result.message || t("settings.saveFailed"));
         }
       })
       .catch((error) => {
-        console.error("表单验证失败:", error);
+        console.error("Form validation failed:", error);
       });
   };
 
-  // 渲染模型卡片
+  // Render model card
   const renderModelCard = (model) => {
-    // 确保模型的enabled属性有一个明确的布尔值
-    const isEnabled = model.enabled !== false; // 如果undefined或null，默认为true
+    // Ensure model's enabled property has a clear boolean value
+    const isEnabled = model.enabled !== false; // If undefined or null, default to true
 
-    // 确定是否为聊天模型
+    // Determine if it's a chat model
     const isChatModel = model.name.toLowerCase().includes("chat");
     const modelIcon = isChatModel ? (
       <MessageOutlined

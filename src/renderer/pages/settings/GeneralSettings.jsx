@@ -14,21 +14,21 @@ const GeneralSettings = ({
   const { t, i18n } = useTranslation();
   const [form] = Form.useForm();
 
-  // 初始化表单值
+  // Initialize form values
   useEffect(() => {
     form.setFieldsValue({
       language: config.language || "en",
     });
   }, [config, form]);
 
-  // 处理表单值变化（移到组件内部）
+  // Handle form value changes (moved to component internal)
   const handleFormValueChange = (changedValues, allValues) => {
-    // 更新配置
+    // Update configuration
     const newConfig = { ...config, ...allValues };
     saveConfig(newConfig);
   };
 
-  // 处理语言变更（移到组件内部）
+  // Handle language change (moved to component internal)
   const handleLanguageChange = (language) => {
     updateLanguage(language);
     i18n.changeLanguage(language);

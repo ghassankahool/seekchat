@@ -71,7 +71,7 @@ Join our [Discord community](https://discord.gg/qcSXXmX9Gx) to get the latest up
 ### WeChat Community
 ![](https://seekrays.com/chat/images/qrcode_seekrays.jpg)
 
-After following our WeChat Official Account, send the message "加群" to join our WeChat community group and discuss with other users.
+After following our WeChat Official Account, send the message "join group" to join our WeChat community group and discuss with other users.
 
 ## 🤝 Contributing
 

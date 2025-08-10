@@ -5,42 +5,42 @@ const logger = require("./logger");
 
 class ChatDatabase {
   constructor() {
-    // 数据库文件路径，放在应用数据目录中
+    // Database file path, placed in the application data directory
     const dbPath = path.join(app.getPath("userData"), "seekchat.db");
 
-    logger.info("数据库文件路径:", dbPath);
+    logger.info("Database file path:", dbPath);
 
     try {
-      // 创建数据库连接
+      // Create database connection
       this.db = new sqlite3.Database(dbPath, (err) => {
         if (err) {
-          logger.error("数据库连接失败:", err.message);
+          logger.error("Database connection failed:", err.message);
         } else {
-          logger.info("已连接到数据库");
+          logger.info("Connected to database");
           this.init();
         }
       });
     } catch (err) {
-      logger.error("创建数据库连接失败:", err.message);
+      logger.error("Failed to create database connection:", err.message);
       throw err;
     }
   }
 
-  // 初始化数据库表
+  // Initialize database tables
   init() {
-    // 检查数据库对象是否存在
+    // Check if database object exists
     if (!this.db) {
-      logger.error("初始化失败：数据库对象不存在");
-      throw new Error("数据库对象不存在");
+      logger.error("Initialization failed: database object does not exist");
+      throw new Error("Database object does not exist");
     }
 
-    // 保存 this 引用，以便在回调中使用
+    // Save this reference for use in callbacks
     const self = this;
 
-    // 启用外键约束
+    // Enable foreign key constraints
     this.db.run("PRAGMA foreign_keys = ON");
 
-    // 创建会话表
+    // Create session table
     this.db.run(`
       CREATE TABLE IF NOT EXISTS chat_session (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -51,7 +51,7 @@ class ChatDatabase {
       )
     `);
 
-    // 创建消息表
+    // Create message table
     this.db.run(`
       CREATE TABLE IF NOT EXISTS chat_message (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -67,7 +67,7 @@ class ChatDatabase {
       )
     `);
 
-    // 创建MCP服务器表
+    // Create MCP server table
     this.db.run(`
       CREATE TABLE IF NOT EXISTS mcp_servers (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -82,30 +82,30 @@ class ChatDatabase {
       )
     `);
 
-    logger.info("数据库表初始化完成");
+    logger.info("Database table initialization completed");
 
-    // 检查是否有会话，如果没有则创建一个默认会话
+    // Check if there are any sessions, if not create a default session
     this.db.get("SELECT COUNT(*) as count FROM chat_session", (err, row) => {
       if (err) {
-        logger.error("检查会话数量失败:", err);
+        logger.error("Failed to check session count:", err);
         return;
       }
 
       if (row.count === 0) {
-        logger.info("创建默认会话");
-        self.createSession("新对话");
+        logger.info("Creating default session");
+        self.createSession("New Chat");
       }
     });
   }
 
-  // 获取所有会话
+  // Get all sessions
   getAllSessions() {
     return new Promise((resolve, reject) => {
       this.db.all(
         "SELECT * FROM chat_session ORDER BY updatedAt DESC",
         (err, rows) => {
           if (err) {
-            logger.error("获取会话列表失败:", err);
+            logger.error("Failed to get session list:", err);
             reject(err);
           } else {
             resolve(rows);
@@ -115,7 +115,7 @@ class ChatDatabase {
     });
   }
 
-  // 创建新会话
+  // Create new session
   createSession(name) {
     return new Promise((resolve, reject) => {
       const now = Date.now();
@@ -125,7 +125,7 @@ class ChatDatabase {
         [name, now, now],
         function (err) {
           if (err) {
-            logger.error("创建会话失败:", err);
+            logger.error("Failed to create session:", err);
             reject(err);
           } else {
             resolve({
@@ -140,7 +140,7 @@ class ChatDatabase {
     });
   }
 
-  // 获取会话的所有消息
+  // Get all messages for a session
   getMessages(sessionId) {
     return new Promise((resolve, reject) => {
       this.db.all(
@@ -148,7 +148,7 @@ class ChatDatabase {
         [sessionId],
         (err, rows) => {
           if (err) {
-            logger.error("获取会话消息失败:", err);
+            logger.error("Failed to get session messages:", err);
             reject(err);
           } else {
             resolve(rows);
@@ -158,7 +158,7 @@ class ChatDatabase {
     });
   }
 
-  // 删除会话的所有消息
+  // Delete all messages for a session
   deleteMessages(sessionId) {
     return new Promise((resolve, reject) => {
       this.db.run(
@@ -166,7 +166,7 @@ class ChatDatabase {
         [sessionId],
         function (err) {
           if (err) {
-            logger.error("删除会话消息失败:", err);
+            logger.error("Failed to delete session messages:", err);
             reject(err);
           } else {
             resolve({ success: true, sessionId, deleted: this.changes });
@@ -176,11 +176,11 @@ class ChatDatabase {
     });
   }
 
-  // 添加新消息
+  // Add new message
   addMessage(message) {
     return new Promise((resolve, reject) => {
       if (!message || !message.sessionId) {
-        reject(new Error("消息必须包含 sessionId"));
+        reject(new Error("Message must contain sessionId"));
         return;
       }
 
@@ -194,16 +194,16 @@ class ChatDatabase {
       } = message;
       const now = Date.now();
 
-      logger.info("数据库: 准备添加消息", {
+      logger.info("Database: Preparing to add message", {
         sessionId,
         role,
         content:
           typeof content === "string"
             ? content.substring(0, 30) + "..."
-            : "[对象]",
+            : "[object]",
       });
 
-      // 保存 this 引用，以便在回调中使用
+      // Save this reference for use in callbacks
       const self = this;
 
       this.db.run(
@@ -211,18 +211,18 @@ class ChatDatabase {
         [sessionId, role, providerId, modelId, content, status, now, now],
         function (err) {
           if (err) {
-            logger.error("添加消息失败:", err);
+            logger.error("Failed to add message:", err);
             reject(err);
           } else {
-            logger.info(`数据库: 消息添加成功, ID: ${this.lastID}`);
+            logger.info(`Database: Message added successfully, ID: ${this.lastID}`);
 
-            // 更新会话的更新时间
+            // Update session's updated time
             self.db.run(
               "UPDATE chat_session SET updatedAt = ? WHERE id = ?",
               [now, sessionId],
               (updateErr) => {
                 if (updateErr) {
-                  logger.warn("更新会话时间失败:", updateErr);
+                  logger.warn("Failed to update session time:", updateErr);
                 }
               }
             );
@@ -244,7 +244,7 @@ class ChatDatabase {
     });
   }
 
-  // 更新消息状态
+  // Update message status
   updateMessageStatus(id, status) {
     return new Promise((resolve, reject) => {
       const now = Date.now();
@@ -254,14 +254,14 @@ class ChatDatabase {
         [status, now, id],
         function (err) {
           if (err) {
-            logger.error("更新消息状态失败:", err);
+            logger.error("Failed to update message status:", err);
             reject(err);
           } else {
             if (this.changes === 0) {
-              logger.warn(`数据库: 未找到要更新状态的消息 ID: ${id}`);
+              logger.warn(`Database: Message not found to update status ID: ${id}`);
             } else {
               logger.info(
-                `数据库: 消息状态更新成功, ID: ${id}, 状态: ${status}`
+                `Database: Message status updated successfully, ID: ${id}, Status: ${status}`
               );
             }
 
@@ -272,7 +272,7 @@ class ChatDatabase {
     });
   }
 
-  // 更新消息内容
+  // Update message content
   updateMessageContent(id, content) {
     return new Promise((resolve, reject) => {
       const now = Date.now();
@@ -282,13 +282,13 @@ class ChatDatabase {
         [content, now, id],
         function (err) {
           if (err) {
-            logger.error("更新消息内容失败:", err);
+            logger.error("Failed to update message content:", err);
             reject(err);
           } else {
             if (this.changes === 0) {
-              logger.warn(`数据库: 未找到要更新内容的消息 ID: ${id}`);
+              logger.warn(`Database: Message not found to update content ID: ${id}`);
             } else {
-              logger.info(`数据库: 消息内容更新成功, ID: ${id}`);
+              logger.info(`Database: Message content updated successfully, ID: ${id}`);
             }
 
             resolve({ id, content, updatedAt: now, changed: this.changes > 0 });
@@ -298,30 +298,30 @@ class ChatDatabase {
     });
   }
 
-  // 删除会话
+  // Delete session
   deleteSession(id) {
     return new Promise((resolve, reject) => {
-      // 保存 this 引用，以便在回调中使用
+      // Save this reference for use in callbacks
       const self = this;
 
-      // 先删除会话的所有消息
+      // First delete all messages for the session
       this.db.run(
         "DELETE FROM chat_message WHERE sessionId = ?",
         [id],
         (err) => {
           if (err) {
-            logger.error("删除会话消息失败:", err);
+            logger.error("Failed to delete session messages:", err);
             reject(err);
             return;
           }
 
-          // 再删除会话
+          // Then delete the session
           self.db.run(
             "DELETE FROM chat_session WHERE id = ?",
             [id],
             function (err) {
               if (err) {
-                logger.error("删除会话失败:", err);
+                logger.error("Failed to delete session:", err);
                 reject(err);
               } else {
                 resolve({ success: true, id, deleted: this.changes > 0 });
@@ -333,11 +333,11 @@ class ChatDatabase {
     });
   }
 
-  // 创建或更新消息
+  // Create or update message
   createOrUpdateMessage(message) {
     return new Promise((resolve, reject) => {
       if (!message || !message.sessionId) {
-        reject(new Error("消息必须包含 sessionId"));
+        reject(new Error("Message must contain sessionId"));
         return;
       }
 
@@ -352,34 +352,34 @@ class ChatDatabase {
       } = message;
       const now = Date.now();
 
-      // 保存 this 引用，以便在回调中使用
+      // Save this reference for use in callbacks
       const self = this;
 
-      // 如果有ID，先检查消息是否存在
+      // If ID exists, first check if message exists
       if (id) {
         this.db.get(
           "SELECT id FROM chat_message WHERE id = ?",
           [id],
           (err, row) => {
             if (err) {
-              logger.error("查询消息失败:", err);
+              logger.error("Failed to query message:", err);
               reject(err);
               return;
             }
 
             if (row) {
-              // 消息存在，更新它
+              // Message exists, update it
               self.db.run(
                 "UPDATE chat_message SET content = ?, status = ?, updatedAt = ? WHERE id = ?",
                 [content, status, now, id],
                 function (err) {
                   if (err) {
-                    logger.error("更新消息失败:", err);
+                    logger.error("Failed to update message:", err);
                     reject(err);
                   } else {
-                    logger.info(`消息更新成功, ID: ${id}`);
+                    logger.info(`Message updated successfully, ID: ${id}`);
 
-                    // 更新会话的更新时间
+                    // Update session's updated time
                     self.db.run(
                       "UPDATE chat_session SET updatedAt = ? WHERE id = ?",
                       [now, sessionId]
@@ -399,7 +399,7 @@ class ChatDatabase {
                 }
               );
             } else {
-              // 消息不存在，创建新消息
+              // Message does not exist, create new message
               self.db.run(
                 "INSERT INTO chat_message (sessionId, role, providerId, modelId, content, status, createdAt, updatedAt) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
                 [
@@ -414,12 +414,12 @@ class ChatDatabase {
                 ],
                 function (err) {
                   if (err) {
-                    logger.error("添加消息失败:", err);
+                    logger.error("Failed to add message:", err);
                     reject(err);
                   } else {
-                    logger.info(`消息创建成功, ID: ${this.lastID}`);
+                    logger.info(`Message created successfully, ID: ${this.lastID}`);
 
-                    // 更新会话的更新时间
+                    // Update session's updated time
                     self.db.run(
                       "UPDATE chat_session SET updatedAt = ? WHERE id = ?",
                       [now, sessionId]
@@ -443,18 +443,18 @@ class ChatDatabase {
           }
         );
       } else {
-        // 没有ID，直接创建新消息
+        // No ID, directly create new message
         this.db.run(
           "INSERT INTO chat_message (sessionId, role, providerId, modelId, content, status, createdAt, updatedAt) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
           [sessionId, role, providerId, modelId, content, status, now, now],
           function (err) {
             if (err) {
-              logger.error("添加消息失败:", err);
+              logger.error("Failed to add message:", err);
               reject(err);
             } else {
-              logger.info(`消息创建成功, ID: ${this.lastID}`);
+              logger.info(`Message created successfully, ID: ${this.lastID}`);
 
-              // 更新会话的更新时间
+              // Update session's updated time
               self.db.run(
                 "UPDATE chat_session SET updatedAt = ? WHERE id = ?",
                 [now, sessionId]
@@ -478,12 +478,12 @@ class ChatDatabase {
     });
   }
 
-  // 更新会话元数据
+  // Update session metadata
   updateSessionMetadata(sessionId, metadata) {
     return new Promise((resolve, reject) => {
       const now = Date.now();
 
-      // 将metadata转换为字符串
+      // Convert metadata to string
       const metadataStr =
         typeof metadata === "string" ? metadata : JSON.stringify(metadata);
 
@@ -492,14 +492,14 @@ class ChatDatabase {
         [metadataStr, now, sessionId],
         function (err) {
           if (err) {
-            logger.error("更新会话元数据失败:", err);
+            logger.error("Failed to update session metadata:", err);
             reject(err);
           } else {
             if (this.changes === 0) {
-              logger.warn(`数据库: 未找到要更新元数据的会话 ID: ${sessionId}`);
-              reject(new Error(`未找到会话 ID: ${sessionId}`));
+              logger.warn(`Database: Session not found to update metadata ID: ${sessionId}`);
+              reject(new Error(`Session not found ID: ${sessionId}`));
             } else {
-              logger.info(`数据库: 会话元数据更新成功, ID: ${sessionId}`);
+              logger.info(`Database: Session metadata updated successfully, ID: ${sessionId}`);
               resolve({
                 id: sessionId,
                 metadata: metadataStr,
@@ -513,7 +513,7 @@ class ChatDatabase {
     });
   }
 
-  // 更新会话名称
+  // Update session name
   updateSessionName(sessionId, name) {
     return new Promise((resolve, reject) => {
       const now = Date.now();
@@ -523,14 +523,14 @@ class ChatDatabase {
         [name, now, sessionId],
         function (err) {
           if (err) {
-            logger.error("更新会话名称失败:", err);
+            logger.error("Failed to update session name:", err);
             reject(err);
           } else {
             if (this.changes === 0) {
-              logger.warn(`数据库: 未找到要更新名称的会话 ID: ${sessionId}`);
-              reject(new Error(`未找到会话 ID: ${sessionId}`));
+              logger.warn(`Database: Session not found to update name ID: ${sessionId}`);
+              reject(new Error(`Session not found ID: ${sessionId}`));
             } else {
-              logger.info(`数据库: 会话名称更新成功, ID: ${sessionId}`);
+              logger.info(`Database: Session name updated successfully, ID: ${sessionId}`);
               resolve({
                 id: sessionId,
                 name,
@@ -544,16 +544,16 @@ class ChatDatabase {
     });
   }
 
-  // 关闭数据库连接
+  // Close database connection
   close() {
     return new Promise((resolve, reject) => {
       if (this.db) {
         this.db.close((err) => {
           if (err) {
-            logger.error("关闭数据库连接失败:", err);
+            logger.error("Failed to close database connection:", err);
             reject(err);
           } else {
-            logger.info("数据库连接已关闭");
+            logger.info("Database connection closed");
             resolve();
           }
         });
@@ -563,12 +563,12 @@ class ChatDatabase {
     });
   }
 
-  // 更新所有处于pending状态的消息为error状态
+  // Update all pending messages to error status
   updateAllPendingMessagesToError() {
     return new Promise((resolve, reject) => {
       const now = Date.now();
       const errorContent = JSON.stringify([
-        { type: "content", text: "页面刷新导致请求中断", status: "error" },
+        { type: "content", text: "Request interrupted due to page refresh", status: "error" },
       ]);
 
       this.db.all(
@@ -576,13 +576,13 @@ class ChatDatabase {
         ["pending"],
         (err, rows) => {
           if (err) {
-            logger.error("查询pending消息失败:", err);
+            logger.error("Failed to query pending messages:", err);
             reject(err);
             return;
           }
 
           logger.info(
-            `找到 ${rows.length} 条处于pending状态的消息，将它们更新为error状态`
+            `Found ${rows.length} messages in pending status, updating them to error status`
           );
 
           if (rows.length === 0) {
@@ -593,22 +593,22 @@ class ChatDatabase {
           const self = this;
           let updatedCount = 0;
 
-          // 使用事务进行批量更新
+          // Use transaction for batch update
           this.db.run("BEGIN TRANSACTION", function (err) {
             if (err) {
-              logger.error("开始事务失败:", err);
+              logger.error("Failed to begin transaction:", err);
               reject(err);
               return;
             }
 
-            // 更新每条消息的状态和内容
+            // Update status and content for each message
             rows.forEach((row) => {
               let content = row.content;
 
-              // 尝试处理JSON格式的内容
+              // Try to handle JSON format content
               try {
                 const parsedContent = JSON.parse(content);
-                // 如果是简单的字符串内容，转换为错误格式
+                // If it's simple string content, convert to error format
                 if (
                   typeof parsedContent === "string" ||
                   !Array.isArray(parsedContent)
@@ -616,7 +616,7 @@ class ChatDatabase {
                   content = errorContent;
                 }
               } catch (e) {
-                // 如果内容不是JSON格式，使用错误内容
+                // If content is not in JSON format, use error content
                 content = errorContent;
               }
 
@@ -625,7 +625,7 @@ class ChatDatabase {
                 ["error", content, now, row.id],
                 function (updateErr) {
                   if (updateErr) {
-                    logger.error(`更新消息 ${row.id} 失败:`, updateErr);
+                    logger.error(`Failed to update message ${row.id}:`, updateErr);
                     self.db.run("ROLLBACK");
                     reject(updateErr);
                     return;
@@ -633,17 +633,17 @@ class ChatDatabase {
 
                   updatedCount += this.changes;
 
-                  // 如果所有消息都已更新，提交事务
+                  // If all messages have been updated, commit transaction
                   if (updatedCount === rows.length) {
                     self.db.run("COMMIT", (commitErr) => {
                       if (commitErr) {
-                        logger.error("提交事务失败:", commitErr);
+                        logger.error("Failed to commit transaction:", commitErr);
                         reject(commitErr);
                         return;
                       }
 
                       logger.info(
-                        `成功将 ${updatedCount} 条pending消息更新为error状态`
+                        `Successfully updated ${updatedCount} pending messages to error status`
                       );
                       resolve({ updatedCount });
                     });
@@ -657,16 +657,16 @@ class ChatDatabase {
     });
   }
 
-  // MCP相关方法
+  // MCP related methods
 
-  // 获取所有MCP服务器
+  // Get all MCP servers
   getAllMCPServers() {
     return new Promise((resolve, reject) => {
       this.db.all(
         `SELECT * FROM mcp_servers ORDER BY created_at DESC`,
         (err, servers) => {
           if (err) {
-            logger.error("获取MCP服务器失败:", err);
+            logger.error("Failed to get MCP servers:", err);
             reject(err);
             return;
           }
@@ -682,14 +682,14 @@ class ChatDatabase {
     });
   }
 
-  // 获取所有激活的MCP服务器
+  // Get all active MCP servers
   getActiveMCPServers() {
     return new Promise((resolve, reject) => {
       this.db.all(
         `SELECT * FROM mcp_servers WHERE active = 1 ORDER BY created_at DESC`,
         (err, servers) => {
           if (err) {
-            logger.error("获取激活的MCP服务器失败:", err);
+            logger.error("Failed to get active MCP servers:", err);
             reject(err);
             return;
           }
@@ -705,7 +705,7 @@ class ChatDatabase {
     });
   }
 
-  // 根据ID获取MCP服务器
+  // Get MCP server by ID
   getMCPServerById(id) {
     return new Promise((resolve, reject) => {
       this.db.get(
@@ -713,7 +713,7 @@ class ChatDatabase {
         [id],
         (err, server) => {
           if (err) {
-            logger.error("获取MCP服务器失败:", err);
+            logger.error("Failed to get MCP server:", err);
             reject(err);
             return;
           }
@@ -731,7 +731,7 @@ class ChatDatabase {
     });
   }
 
-  // 添加MCP服务器
+  // Add MCP server
   addMCPServer(serverData) {
     return new Promise((resolve, reject) => {
       const timestamp = Date.now();
@@ -750,7 +750,7 @@ class ChatDatabase {
         ],
         (err) => {
           if (err) {
-            logger.error("添加MCP服务器失败:", err);
+            logger.error("Failed to add MCP server:", err);
             reject(err);
             return;
           }
@@ -760,23 +760,23 @@ class ChatDatabase {
     });
   }
 
-  // 更新MCP服务器信息
+  // Update MCP server information
   updateMCPServer(id, updates) {
     return new Promise((resolve, reject) => {
       const timestamp = Date.now();
       const updateFields = [];
       const updateValues = [];
 
-      // 处理tools字段，如果存在则转为JSON
+      // Handle tools field, convert to JSON if exists
       if (updates.tools !== undefined) {
         updates.tools = JSON.stringify(updates.tools);
       }
 
-      // 构建更新字段
+      // Build update fields
       for (const [key, value] of Object.entries(updates)) {
-        if (key === "id") continue; // 不允许更新ID
+        if (key === "id") continue; // Don't allow updating ID
 
-        // 转换驼峰命名为下划线命名
+        // Convert camelCase to snake_case
         const dbField = key.replace(/([A-Z])/g, "_$1").toLowerCase();
         updateFields.push(`${dbField} = ?`);
         updateValues.push(value);
@@ -785,7 +785,7 @@ class ChatDatabase {
       updateFields.push("updated_at = ?");
       updateValues.push(timestamp);
 
-      // 添加id到更新参数
+      // Add id to update parameters
       updateValues.push(id);
 
       const sql = `UPDATE mcp_servers SET ${updateFields.join(
@@ -794,7 +794,7 @@ class ChatDatabase {
 
       this.db.run(sql, updateValues, (err) => {
         if (err) {
-          logger.error("更新MCP服务器失败:", err);
+          logger.error("Failed to update MCP server:", err);
           reject(err);
           return;
         }
@@ -804,12 +804,12 @@ class ChatDatabase {
     });
   }
 
-  // 删除MCP服务器
+  // Delete MCP server
   deleteMCPServer(id) {
     return new Promise((resolve, reject) => {
       this.db.run(`DELETE FROM mcp_servers WHERE id = ?`, [id], (err) => {
         if (err) {
-          logger.error("删除MCP服务器失败:", err);
+          logger.error("Failed to delete MCP server:", err);
           reject(err);
           return;
         }
@@ -819,7 +819,7 @@ class ChatDatabase {
     });
   }
 
-  // 设置MCP服务器激活状态
+  // Set MCP server active status
   setMCPServerActive(id, active) {
     return new Promise((resolve, reject) => {
       this.db.run(
@@ -827,7 +827,7 @@ class ChatDatabase {
         [active ? 1 : 0, Date.now(), id],
         (err) => {
           if (err) {
-            logger.error("设置MCP服务器激活状态失败:", err);
+            logger.error("Failed to set MCP server active status:", err);
             reject(err);
             return;
           }
@@ -838,7 +838,7 @@ class ChatDatabase {
     });
   }
 
-  // 更新MCP服务器工具
+  // Update MCP server tools
   updateMCPServerTools(id, tools) {
     return new Promise((resolve, reject) => {
       const timestamp = Date.now();
@@ -847,7 +847,7 @@ class ChatDatabase {
         [JSON.stringify(tools), timestamp, id],
         (err) => {
           if (err) {
-            logger.error("更新MCP服务器工具失败:", err);
+            logger.error("Failed to update MCP server tools:", err);
             reject(err);
             return;
           }

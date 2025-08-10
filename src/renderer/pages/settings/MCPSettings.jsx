@@ -50,23 +50,23 @@ const MCPSettings = () => {
   const [testResult, setTestResult] = useState(null);
   const [form] = Form.useForm();
 
-  // 当前服务器类型
+  // Current server type
   const [serverType, setServerType] = useState("stdio");
 
-  // 设置初始服务器类型
+  // Set initial server type
   useEffect(() => {
     const initialType = form.getFieldValue("type") || "stdio";
     setServerType(initialType);
   }, [modalVisible]);
 
-  // 加载MCP服务器列表
+  // Load MCP server list
   const loadServers = async () => {
     try {
       setLoading(true);
       const data = await mcpService.getAllServers();
       setServers(data);
     } catch (error) {
-      console.error("加载MCP服务器列表失败", error);
+      console.error("Failed to load MCP server list", error);
       message.error(t("settings.loadServersFailed"));
     } finally {
       setLoading(false);
@@ -77,12 +77,12 @@ const MCPSettings = () => {
     loadServers();
   }, []);
 
-  // 添加或更新服务器
+  // Add or update server
   const handleSaveServer = async () => {
     try {
       const values = await form.validateFields();
 
-      // 检查工具名称唯一性
+      // Check tool name uniqueness
       const isDuplicate = servers.some(
         (server) =>
           server.name === values.name &&
@@ -105,12 +105,12 @@ const MCPSettings = () => {
       setModalVisible(false);
       loadServers();
     } catch (error) {
-      console.error("保存服务器失败:", error);
+      console.error("Failed to save server:", error);
       message.error(t("settings.saveFailed"));
     }
   };
 
-  // 删除服务器
+  // Delete server
   const handleDeleteServer = (server) => {
     confirm({
       title: t("settings.confirmDelete"),
@@ -125,22 +125,22 @@ const MCPSettings = () => {
           message.success(t("settings.serverDeleted"));
           loadServers();
         } catch (error) {
-          console.error("删除服务器失败:", error);
+          console.error("Failed to delete server:", error);
           message.error(t("settings.deleteFailed"));
         }
       },
     });
   };
 
-  // 测试连接
+  // Test connection
   const testConnection = async (serverData, options = {}) => {
     try {
-      // 如果没有传入serverData，则从表单获取
+      // If no serverData is passed, get from form
       if (!serverData) {
         const values = await form.validateFields(["url", "type"]);
         serverData = {
           ...values,
-          apiKey: "", // 设置为空字符串
+          apiKey: "", // Set to empty string
           id: editingServer?.id,
         };
       }
@@ -152,15 +152,15 @@ const MCPSettings = () => {
 
       const result = await mcpService.testConnection(serverData);
 
-      // 如果是测试失败并且有ID，则更新服务器记录清空tools
+      // If test fails and has ID, update server record to clear tools
       if (!result.success && serverData.id) {
-        // 清空工具列表
+        // Clear tool list
         await mcpService.updateServer(serverData.id, { tools: [] });
 
-        // 如果是通过toggleServerActive调用的，则不需要再次loadServers，
-        // 因为toggleServerActive会处理
+        // If called through toggleServerActive, no need to loadServers again,
+        // because toggleServerActive will handle it
         if (!options.skipReload) {
-          // 更新本地状态以立即反映变化
+          // Update local state to immediately reflect changes
           setServers((prev) =>
             prev.map((s) => {
               if (s.id === serverData.id) {
@@ -178,7 +178,7 @@ const MCPSettings = () => {
 
       return result;
     } catch (error) {
-      console.error("测试连接失败:", error);
+      console.error("Failed to test connection:", error);
       if (!options.silent) {
         message.error(t("settings.testFailed"));
       }
@@ -190,10 +190,10 @@ const MCPSettings = () => {
     }
   };
 
-  // 切换服务器激活状态
+  // Toggle server active status
   const toggleServerActive = async (server) => {
     try {
-      // 如果要启用，先测试连接
+      // If enabling, test connection first
       if (!server.active) {
         message.loading(t("settings.testingConnectionMsg"), 0);
 
@@ -203,7 +203,7 @@ const MCPSettings = () => {
             name: server.name,
             url: server.url,
             type: server.type,
-            apiKey: "", // 设置为空字符串
+            apiKey: "", // Set to empty string
           },
           { silent: true, skipReload: true }
         );
@@ -212,14 +212,14 @@ const MCPSettings = () => {
 
         if (!testResult.success) {
           message.error(t("settings.connectionTestFailedMsg"));
-          // 连接失败时，确保工具处于关闭状态（虽然本来就是关闭的）
+          // When connection fails, ensure tools are in disabled state (although they already are)
           await mcpService.setServerActive(server.id, false);
           loadServers();
           return;
         }
       }
 
-      // 更新服务器激活状态
+      // Update server active status
       await mcpService.setServerActive(server.id, !server.active);
       loadServers();
       message.success(
@@ -228,12 +228,12 @@ const MCPSettings = () => {
           : t("settings.serverActivated")
       );
     } catch (error) {
-      console.error("切换服务器状态失败:", error);
+      console.error("Failed to toggle server status:", error);
       message.error(t("settings.toggleActiveFailed"));
     }
   };
 
-  // 刷新工具列表
+  // Refresh tool list
   const refreshTools = async (server) => {
     form.resetFields();
     form.setFieldsValue({
@@ -250,7 +250,7 @@ const MCPSettings = () => {
         name: server.name,
         url: server.url,
         type: server.type,
-        apiKey: "", // 设置为空字符串
+        apiKey: "", // Set to empty string
       },
       { silent: true }
     );
@@ -261,7 +261,7 @@ const MCPSettings = () => {
       message.success(
         t("settings.toolsFoundSuccessMsg", { count: result.tools.length })
       );
-      loadServers(); // 重新加载列表以显示更新的工具
+      loadServers(); // Reload list to display updated tools
     } else {
       message.error(
         t("settings.refreshToolsFailedMsg", { message: result.message })
@@ -269,7 +269,7 @@ const MCPSettings = () => {
     }
   };
 
-  // 打开添加/编辑模态框
+  // Open add/edit modal
   const openEditModal = (server = null) => {
     setEditingServer(server);
     form.resetFields();
@@ -282,17 +282,17 @@ const MCPSettings = () => {
         type: server.type,
         description: server.description,
       });
-      // 更新服务器类型
+      // Update server type
       setServerType(server.type);
     } else {
-      // 默认类型为stdio
+      // Default type is stdio
       setServerType("stdio");
     }
 
     setModalVisible(true);
   };
 
-  // 渲染工具提示内容
+  // Render tool tooltip content
   const renderToolTooltip = (tools) => {
     if (!tools || tools.length === 0) {
       return t("settings.noToolsFound");
@@ -323,7 +323,7 @@ const MCPSettings = () => {
     );
   };
 
-  // 渲染工具列表（测试结果使用）
+  // Render tool list (used for test results)
   const renderToolList = (tools) => {
     if (!tools || tools.length === 0) {
       return <Alert message={t("settings.noToolsFound")} type="info" />;
@@ -346,7 +346,7 @@ const MCPSettings = () => {
     );
   };
 
-  // 渲染工具标签列表
+  // Render tool tag list
   const renderToolTags = (tools) => {
     if (!tools || tools.length === 0) {
       return null;

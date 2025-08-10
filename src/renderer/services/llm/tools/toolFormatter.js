@@ -1,12 +1,12 @@
 /**
- * 工具格式化模块
- * 负责将MCP工具转换为不同AI提供商所需的格式
+ * Tool formatting module
+ * Responsible for converting MCP tools to formats required by different AI providers
  */
 
 /**
- * 将MCP工具转换为OpenAI functions格式
- * @param {Array} mcpTools MCP工具列表
- * @returns {Array} OpenAI functions格式的工具列表
+ * Convert MCP tools to OpenAI functions format
+ * @param {Array} mcpTools MCP tool list
+ * @returns {Array} Tool list in OpenAI functions format
  */
 export const formatMCPToolsForOpenAI = (mcpTools) => {
   if (!mcpTools || !Array.isArray(mcpTools) || mcpTools.length === 0) {
@@ -14,7 +14,7 @@ export const formatMCPToolsForOpenAI = (mcpTools) => {
   }
 
   return mcpTools.map((tool) => {
-    // 获取参数定义
+    // Get parameter definition
     const parameters = tool.parameters || {};
 
     return {
@@ -33,9 +33,9 @@ export const formatMCPToolsForOpenAI = (mcpTools) => {
 };
 
 /**
- * 将MCP工具转换为Anthropic tools格式
- * @param {Array} mcpTools MCP工具列表
- * @returns {Array} Anthropic tools格式的工具列表
+ * Convert MCP tools to Anthropic tools format
+ * @param {Array} mcpTools MCP tool list
+ * @returns {Array} Tool list in Anthropic tools format
  */
 export const formatMCPToolsForAnthropic = (mcpTools) => {
   if (!mcpTools || !Array.isArray(mcpTools) || mcpTools.length === 0) {
@@ -43,7 +43,7 @@ export const formatMCPToolsForAnthropic = (mcpTools) => {
   }
 
   return mcpTools.map((tool) => {
-    // 获取参数定义
+    // Get parameter definition
     const parameters = tool.parameters || {};
 
     return {
@@ -59,10 +59,10 @@ export const formatMCPToolsForAnthropic = (mcpTools) => {
 };
 
 /**
- * 根据提供商格式化MCP工具
- * @param {Array} mcpTools MCP工具列表
- * @param {string} providerId 提供商ID
- * @returns {Array} 格式化后的工具列表
+ * Format MCP tools based on provider
+ * @param {Array} mcpTools MCP tool list
+ * @param {string} providerId Provider ID
+ * @returns {Array} Formatted tool list
  */
 export const formatToolsForProvider = (mcpTools, providerId) => {
   if (!mcpTools || !Array.isArray(mcpTools) || mcpTools.length === 0) {
@@ -75,7 +75,7 @@ export const formatToolsForProvider = (mcpTools, providerId) => {
     case "anthropic":
       return formatMCPToolsForAnthropic(mcpTools);
     default:
-      // 默认使用OpenAI格式
+      // Default to OpenAI format
       return formatMCPToolsForOpenAI(mcpTools);
   }
 };

@@ -7,22 +7,22 @@ import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
 import { vscDarkPlus } from "react-syntax-highlighter/dist/esm/styles/prism";
 import { message as antMessage } from "antd";
 
-// 消息内容组件
+// Message content component
 const MessageContent = ({ content }) => {
   const { t } = useTranslation();
 
-  // 如果内容是字符串，尝试解析为 JSON
+  // If content is string, try to parse as JSON
   let parsedContent = content;
   if (typeof content === "string") {
     try {
       parsedContent = JSON.parse(content);
     } catch (error) {
-      // 如果解析失败，使用原始内容
+      // If parsing fails, use original content
       parsedContent = [{ type: "content", content }];
     }
   }
 
-  // 复制代码到剪贴板的函数
+  // Function to copy code to clipboard
   const copyCodeToClipboard = (code) => {
     navigator.clipboard
       .writeText(code)
@@ -30,23 +30,23 @@ const MessageContent = ({ content }) => {
         antMessage.success(t("chat.codeCopied"));
       })
       .catch((err) => {
-        console.error("复制代码失败:", err);
+        console.error("Failed to copy code:", err);
         antMessage.error(t("chat.copyFailed"));
       });
   };
 
-  // 处理链接点击事件，在外部浏览器中打开
+  // Handle link click events, open in external browser
   const handleLinkClick = (href, event) => {
     event.preventDefault();
 
-    // 使用electronAPI在浏览器中打开链接
+    // Use electronAPI to open link in browser
     window.electronAPI.openExternalURL(href).catch((err) => {
       console.error(t("about.openLinkFailed"), err);
       antMessage.error(`${t("about.openLinkFailed")} ${err.message}`);
     });
   };
 
-  // 渲染 Markdown 内容，重点处理代码块
+  // Render Markdown content, focusing on code blocks
   const components = {
     code({ node, inline, className, children, ...props }) {
       const match = /language-(\w+)/.exec(className || "");
@@ -82,7 +82,7 @@ const MessageContent = ({ content }) => {
       );
     },
 
-    // 自定义链接渲染，设置为在外部浏览器打开
+    // Custom link rendering, set to open in external browser
     a({ node, href, children, ...props }) {
       return (
         <a
@@ -97,7 +97,7 @@ const MessageContent = ({ content }) => {
     },
   };
 
-  // 主要内容
+  // Main content
   const mainContent = parsedContent.find((item) => item.type === "content");
   const reasoningContent = parsedContent.find(
     (item) => item.type === "reasoning_content"
@@ -115,7 +115,7 @@ const MessageContent = ({ content }) => {
 
   return (
     <div>
-      {/* 渲染主要内容 */}
+      {/* Render main content */}
       {mainContent && mainContent.content && (
         <div
           className={`message-text ${
@@ -128,7 +128,7 @@ const MessageContent = ({ content }) => {
         </div>
       )}
 
-      {/* 渲染推理内容（如果有） */}
+      {/* Render reasoning content (if any) */}
       {reasoningContent && reasoningContent.content && (
         <div
           className={`reasoning-content ${
@@ -141,24 +141,24 @@ const MessageContent = ({ content }) => {
         </div>
       )}
 
-      {/* 渲染工具调用结果（如果有） */}
+      {/* Render tool call results (if any) */}
       {toolCallsContent && toolCallsContent.content && (
         <div className="tool-calls-content">
           {Array.isArray(toolCallsContent.content) ? (
             toolCallsContent.content.map((toolCall, index) => (
               <div key={index} className="tool-call-item">
                 <div className="tool-call-name">
-                  工具：{toolCall.name || "未知工具"}
+                  Tool: {toolCall.name || "Unknown tool"}
                 </div>
                 <div className="tool-call-result">
                   <ReactMarkdown components={components}>
-                    {toolCall.result || "无结果"}
+                    {toolCall.result || "No result"}
                   </ReactMarkdown>
                 </div>
               </div>
             ))
           ) : (
-            <div>无工具调用结果</div>
+            <div>No tool call results</div>
           )}
         </div>
       )}
@@ -166,9 +166,9 @@ const MessageContent = ({ content }) => {
   );
 };
 
-// 复制消息内容到剪贴板
+// Copy message content to clipboard
 const copyToClipboard = (content, t) => {
-  // 提取纯文本内容
+  // Extract plain text content
   let textContent = "";
 
   if (typeof content === "string") {
@@ -188,21 +188,21 @@ const copyToClipboard = (content, t) => {
     }
   }
 
-  // 复制到剪贴板
+  // Copy to clipboard
   navigator.clipboard
     .writeText(textContent)
     .then(() => {
       antMessage.success(t("chat.messageCopied"));
     })
     .catch((err) => {
-      console.error("复制失败:", err);
+      console.error("Copy failed:", err);
       antMessage.error(t("chat.copyFailed"));
     });
 };
 
-// 消息项组件 - 使用memo优化渲染性能
+// Message item component - use memo to optimize rendering performance
 const MessageItem = memo(({ message, style, getProviderAndModelInfo, t }) => {
-  // 获取当前消息的AI模型信息
+  // Get current message AI model information
   const modelInfo =
     message.role === "assistant" && message.providerId && message.modelId
       ? getProviderAndModelInfo(message.providerId, message.modelId)
@@ -215,7 +215,7 @@ const MessageItem = memo(({ message, style, getProviderAndModelInfo, t }) => {
 
   return (
     <div
-      style={style} // 这个style属性是虚拟列表给的定位样式
+      style={style} // This style property is the positioning style provided by virtual list
       className={`message-item ${
         message.role === "user" ? "user-message" : "ai-message"
       }`}

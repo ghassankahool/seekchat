@@ -15,7 +15,7 @@ import { providerService } from "../services/providerService";
 import "../styles/SettingsPage.css";
 import { useTranslation } from "react-i18next";
 
-// 导入拆分后的组件
+// Import split components
 import ModelServices from "./settings/ModelServices";
 import ProviderSettings from "./settings/ProviderSettings";
 import GeneralSettings from "./settings/GeneralSettings";
@@ -25,7 +25,7 @@ import MCPSettings from "./settings/MCPSettings";
 const { Content, Header, Sider } = Layout;
 const { Title } = Typography;
 
-// 配置名称常量
+// Config name constants
 const userConfigName = "user_config";
 const providersConfigName = "providers_config";
 
@@ -38,78 +38,78 @@ const SettingsPage = () => {
   const [selectedProvider, setSelectedProvider] = useState(null);
   const [providers, setProviders] = useState([]);
 
-  // 初始化时加载提供商配置
+  // Load provider config on initialization
   useEffect(() => {
-    // 使用providerService获取所有提供商
+    // Use providerService to get all providers
     const allProviders = providerService.getAllProviders();
     setProviders(allProviders);
-    console.log("加载所有提供商:", allProviders);
+    console.log("Loaded all providers:", allProviders);
   }, []);
 
-  // 处理返回按钮点击
+  // Handle back button click
   const handleBack = () => {
     navigate("/");
   };
 
-  // 处理菜单选择
+  // Handle menu selection
   const handleMenuSelect = ({ key }) => {
     setCurrentMenuKey(key);
     setSelectedProvider(null);
   };
 
-  // 处理选择提供商
+  // Handle provider selection
   const handleSelectProvider = (provider) => {
-    // 即使提供商被禁用，也允许进行配置
-    console.log("选择提供商:", provider);
+    // Allow configuration even if provider is disabled
+    console.log("Selected provider:", provider);
     setSelectedProvider(provider);
     setCurrentMenuKey("provider-settings");
   };
 
-  // 处理提供商数据更新
+  // Handle provider data update
   const handleProviderUpdate = (updatedProvider) => {
-    // 如果 updatedProvider 为 null，表示提供商已被删除
+    // If updatedProvider is null, it means the provider has been deleted
     if (!updatedProvider) {
-      // 重新加载所有提供商
+      // Reload all providers
       const allProviders = providerService.getAllProviders();
       setProviders(allProviders);
       return;
     }
 
-    // 更新providers列表中的对应提供商
+    // Update corresponding provider in providers list
     const updatedProviders = providers.map((provider) =>
       provider.id === updatedProvider.id ? updatedProvider : provider
     );
     setProviders(updatedProviders);
   };
 
-  // 处理重置所有配置
+  // Handle reset all configurations
   const handleResetAllConfig = () => {
     Modal.confirm({
       title: t("settings.clearConfigConfirm"),
       icon: <ExclamationCircleOutlined />,
       onOk() {
-        // 清除所有配置
+        // Clear all configurations
         const success = clearAllConfig();
 
         if (success) {
-          // 显示成功消息
+          // Show success message
           message.success(t("settings.clearSuccess"));
 
-          // 延迟500毫秒后刷新页面，确保配置完全清除
+          // Delay 500ms before refreshing page to ensure configuration is completely cleared
           setTimeout(() => {
             window.location.reload();
           }, 500);
         } else {
-          message.error("清除配置失败，请重试");
+          message.error("Failed to clear configuration, please try again");
         }
       },
       onCancel() {
-        // 用户取消操作
+        // User cancelled operation
       },
     });
   };
 
-  // 渲染当前选择的内容
+  // Render currently selected content
   const renderContent = () => {
     switch (currentMenuKey) {
       case "model-services":
@@ -142,7 +142,7 @@ const SettingsPage = () => {
       case "mcp-settings":
         return <MCPSettings />;
       default:
-        return <div>未知设置页面</div>;
+        return <div>Unknown settings page</div>;
     }
   };
 

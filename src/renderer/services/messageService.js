@@ -56,7 +56,7 @@ export const formatMessageContent = (contentArray) => {
  */
 export const parseMessageContent = (contentString) => {
   try {
-    // 尝试解析为 JSON
+    // Try to parse as JSON
     const parsed = JSON.parse(contentString);
     if (Array.isArray(parsed)) {
       return parsed;

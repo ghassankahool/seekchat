@@ -24,7 +24,7 @@ const { Title, Text, Paragraph } = Typography;
 const AboutSection = () => {
   const { t, i18n } = useTranslation();
 
-  // 打开外部链接的函数
+  // Function to open external links
   const openExternalLink = (url) => {
     window.electronAPI.openExternalURL(url).catch((err) => {
       console.error(t("about.openLinkFailed"), err);
@@ -41,7 +41,7 @@ const AboutSection = () => {
         }}
       >
         <Space direction="vertical" size="large" style={{ width: "100%" }}>
-          {/* 顶部Logo和标题 */}
+          {/* Top Logo and Title */}
           <div style={{ textAlign: "center", marginBottom: 20 }}>
             <Avatar
               size={80}
@@ -71,7 +71,7 @@ const AboutSection = () => {
 
           <Divider style={{ margin: "24px 0" }} />
 
-          {/* 链接卡片区域 */}
+          {/* Link Cards Area */}
           <Row gutter={[16, 16]} justify="center">
             <Col xs={24} sm={12} md={6}>
               <Card
@@ -179,7 +179,7 @@ const AboutSection = () => {
 
           <Divider style={{ margin: "24px 0" }} />
 
-          {/* 版权信息 */}
+          {/* Copyright Information */}
           <div style={{ textAlign: "center" }}>
             <Text type="secondary" style={{ fontSize: "14px" }}>
               © {new Date().getFullYear()} SeekRays.{" "}

@@ -2,31 +2,31 @@ const electronLog = require("electron-log");
 const path = require("path");
 const { app } = require("electron");
 
-// 配置日志文件
+// Configure log file
 electronLog.transports.file.resolvePathFn = () => {
-  // 获取用户数据路径
+  // Get user data path
   const userDataPath = app.getPath("userData");
   return path.join(userDataPath, "logs/main.log");
 };
 
-// 配置日志格式
+// Configure log format
 electronLog.transports.file.format =
   "[{y}-{m}-{d} {h}:{i}:{s}.{ms}] [{level}] {text}";
 
-// 设置日志文件大小限制为10MB
+// Set log file size limit to 10MB
 electronLog.transports.file.maxSize = 10 * 1024 * 1024;
 
-// 设置保留最近5个日志文件
+// Set to keep the latest 5 log files
 electronLog.transports.file.maxFiles = 5;
 
-// 配置控制台输出
+// Configure console output
 electronLog.transports.console.format = "[{level}] {text}";
 
-// 设置日志级别
+// Set log level
 electronLog.transports.file.level = "info";
 electronLog.transports.console.level = "debug";
 
-// 创建一个包装器，同时输出到控制台和文件
+// Create a wrapper that outputs to both console and file
 const logger = {
   error: (...params) => {
     electronLog.error(...params);
@@ -46,14 +46,14 @@ const logger = {
   silly: (...params) => {
     electronLog.silly(...params);
   },
-  // 捕获未处理的异常和Promise拒绝
+  // Catch unhandled exceptions and Promise rejections
   catchErrors: () => {
     process.on("uncaughtException", (error) => {
-      logger.error("未捕获的异常:", error);
+      logger.error("Uncaught exception:", error);
     });
 
     process.on("unhandledRejection", (reason) => {
-      logger.error("未处理的Promise拒绝:", reason);
+      logger.error("Unhandled Promise rejection:", reason);
     });
   },
 };

@@ -1,19 +1,19 @@
 /**
- * Gemini 适配器
- * 处理与Google Gemini API的交互
+ * Gemini adapter
+ * Handles interaction with Google Gemini API
  */
 
 import baseOpenAICompatibleAdapter from "./baseAdapter.js";
 
 /**
- * Gemini 提供商适配器
- * @param {Array} messages 消息列表
- * @param {Object} provider 提供商配置
- * @param {Object} model 模型配置
- * @param {Function} onProgress 进度回调函数
- * @param {Function} onComplete 完成回调函数
- * @param {Object} options 选项参数
- * @returns {Promise} 响应
+ * Gemini provider adapter
+ * @param {Array} messages Message list
+ * @param {Object} provider Provider configuration
+ * @param {Object} model Model configuration
+ * @param {Function} onProgress Progress callback function
+ * @param {Function} onComplete Complete callback function
+ * @param {Object} options Option parameters
+ * @returns {Promise} Response
  */
 const geminiAdapter = async (
   messages,
@@ -23,11 +23,11 @@ const geminiAdapter = async (
   onComplete,
   options = {}
 ) => {
-  // Gemini使用不同的端点和请求格式
+  // Gemini uses different endpoints and request formats
   const adapterConfig = {
     endpoint: `/models/${model.id}:generateContent?key=${provider.apiKey}`,
 
-    // 请求体转换器
+    // Request body transformer
     requestTransformer: (requestBody, model, options) => {
       const formattedMessages = messages.map((msg) => ({
         role: msg.role === "user" ? "user" : "model",
@@ -44,7 +44,7 @@ const geminiAdapter = async (
       };
     },
 
-    // 流处理器
+    // Stream processor
     streamProcessor: (data, content, reasoning_content) => {
       let hasUpdate = false;
 
@@ -67,7 +67,7 @@ const geminiAdapter = async (
       };
     },
 
-    // 响应解析器
+    // Response parser
     responseParser: (data, model) => {
       const content =
         data.candidates &&

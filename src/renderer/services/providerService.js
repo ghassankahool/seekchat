@@ -1,7 +1,7 @@
 /**
  * providerService.js
- * 提供商和模型统一管理服务
- * 整合所有提供商和模型的操作，提供统一的接口
+ * Unified management service for providers and models
+ * Integrates all provider and model operations, providing a unified interface
  */
 
 import { providers as systemProviders } from "./models.js";
@@ -10,43 +10,43 @@ import { v4 as uuidv4 } from "uuid";
 import i18n from "../i18n";
 
 /**
- * 获取所有提供商（包括系统和自定义提供商）
- * @returns {Array} 所有提供商列表
+ * Get all providers (including system and custom providers)
+ * @returns {Array} List of all providers
  */
 export const getAllProviders = () => {
-  // 获取保存的提供商配置
+  // Get saved provider configurations
   const savedProviderConfigs = getProvidersConfig();
 
-  // 创建系统提供商的副本
+  // Create a copy of system providers
   const allProviders = JSON.parse(JSON.stringify(systemProviders));
 
-  // 更新系统提供商的配置
+  // Update system provider configurations
   allProviders.forEach((provider) => {
     const savedConfig = savedProviderConfigs[provider.id];
     if (savedConfig) {
-      // 如果有保存的配置，则使用保存的配置
+  // Use saved configuration if available
       provider.apiKey = savedConfig.apiKey || "";
       provider.baseUrl = savedConfig.baseUrl || "";
       provider.enabled =
         savedConfig.enabled !== undefined ? savedConfig.enabled : false;
 
-      // 更新模型的启用状态和删除状态
+  // Update model enabled and deleted status
       if (savedConfig.models)
         provider.models.forEach((model) => {
           const savedModel = savedConfig.models.find((m) => m.id === model.id);
           if (savedModel) {
             model.enabled =
               savedModel.enabled !== undefined ? savedModel.enabled : true;
-            // 添加删除标志支持
+            // Add support for deleted flag
             model.deleted = savedModel.deleted === true;
           } else {
-            // 如果没有保存的模型配置，默认启用且未删除
+            // If no saved model config, default to enabled and not deleted
             model.enabled = true;
             model.deleted = false;
           }
         });
 
-      // 添加保存的模型中在系统模型中不存在的模型（可能是后来添加的）
+  // Add models from saved config that do not exist in system models (possibly added later)
       if (savedConfig.models) {
         savedConfig.models.forEach((savedModel) => {
           const existingModel = provider.models.find(
@@ -64,7 +64,7 @@ export const getAllProviders = () => {
         });
       }
     } else {
-      // 如果没有保存的配置，默认禁用提供商，但所有模型都启用且未删除
+  // If no saved config, provider is disabled by default, but all models are enabled and not deleted
       provider.enabled = false;
       provider.models.forEach((model) => {
         model.enabled = true;
@@ -73,7 +73,7 @@ export const getAllProviders = () => {
     }
   });
 
-  // 添加自定义提供商
+  // Add custom providers
   Object.keys(savedProviderConfigs).forEach((providerId) => {
     const providerConfig = savedProviderConfigs[providerId];
     if (providerConfig.isCustom) {
@@ -94,7 +94,7 @@ export const getAllProviders = () => {
     }
   });
 
-  // 从结果中过滤掉标记为已删除的模型
+  // Filter out models marked as deleted from the result
   allProviders.forEach((provider) => {
     provider.models = provider.models.filter((model) => !model.deleted);
   });
@@ -103,21 +103,21 @@ export const getAllProviders = () => {
 };
 
 /**
- * 获取启用的提供商列表
- * @returns {Array} 启用的提供商列表
+ * Get the list of enabled providers
+ * @returns {Array} List of enabled providers
  */
 export const getEnabledProviders = () => {
-  // 获取所有提供商（包括自定义提供商）
+  // Get all providers (including custom providers)
   const allProviders = getAllProviders();
 
-  // 过滤出启用的提供商
+  // Filter out enabled providers
   return allProviders.filter((provider) => provider.enabled !== false);
 };
 
 /**
- * 通过ID获取提供商
- * @param {string} providerId 提供商ID
- * @returns {Object|null} 提供商对象或null
+ * Get provider by ID
+ * @param {string} providerId Provider ID
+ * @returns {Object|null} Provider object or null
  */
 export const getProviderById = (providerId) => {
   const providers = getAllProviders();
@@ -125,10 +125,10 @@ export const getProviderById = (providerId) => {
 };
 
 /**
- * 启用或禁用提供商
- * @param {string} providerId 提供商ID
- * @param {boolean} enabled 是否启用
- * @returns {Object} 更新结果
+ * Enable or disable provider
+ * @param {string} providerId Provider ID
+ * @param {boolean} enabled Whether enabled
+ * @returns {Object} Update result
  */
 export const enableProvider = (providerId, enabled) => {
   try {
@@ -147,16 +147,16 @@ export const enableProvider = (providerId, enabled) => {
         : i18n.t("settings.updateFailed"),
     };
   } catch (error) {
-    console.error("启用/禁用提供商失败:", error);
+  console.error("Failed to enable/disable provider:", error);
     return { success: false, message: error.message };
   }
 };
 
 /**
- * 保存提供商设置
- * @param {string} providerId 提供商ID
- * @param {Object} settings 提供商设置
- * @returns {Object} 更新结果
+ * Save provider settings
+ * @param {string} providerId Provider ID
+ * @param {Object} settings Provider settings
+ * @returns {Object} Update result
  */
 export const saveProviderSettings = (providerId, settings) => {
   try {
@@ -166,12 +166,12 @@ export const saveProviderSettings = (providerId, settings) => {
       models: [],
     };
 
-    // 更新提供商设置
+  // Update provider settings
     Object.keys(settings).forEach((key) => {
       providerConfig[key] = settings[key];
     });
 
-    // 保存配置
+  // Save config
     providersConfig[providerId] = providerConfig;
     const success = saveProviderConfig(providersConfig);
 
@@ -182,22 +182,22 @@ export const saveProviderSettings = (providerId, settings) => {
         : i18n.t("settings.saveFailed"),
     };
   } catch (error) {
-    console.error("保存提供商设置失败:", error);
+  console.error("Failed to save provider settings:", error);
     return { success: false, message: error.message };
   }
 };
 
 /**
- * 添加自定义提供商
- * @param {Object} providerData 提供商数据
- * @returns {Object} 添加结果
+ * Add custom provider
+ * @param {Object} providerData Provider data
+ * @returns {Object} Add result
  */
 export const addCustomProvider = (providerData) => {
   try {
     const providerId = providerData.id || uuidv4();
     const providersConfig = getProvidersConfig();
 
-    // 创建新的提供商配置
+  // Create new provider config
     providersConfig[providerId] = {
       id: providerId,
       name: providerData.name || "Custom Provider",
@@ -219,19 +219,19 @@ export const addCustomProvider = (providerData) => {
         : i18n.t("settings.addProviderFailed"),
     };
   } catch (error) {
-    console.error("添加自定义提供商失败:", error);
+  console.error("Failed to add custom provider:", error);
     return { success: false, message: error.message };
   }
 };
 
 /**
- * 删除提供商
- * @param {string} providerId 提供商ID
- * @returns {Object} 删除结果
+ * Delete provider
+ * @param {string} providerId Provider ID
+ * @returns {Object} Delete result
  */
 export const deleteProvider = (providerId) => {
   try {
-    // 检查是否是系统提供商
+  // Check if it is a system provider
     const provider = getProviderById(providerId);
     if (provider && !provider.isCustom) {
       return {
@@ -252,15 +252,15 @@ export const deleteProvider = (providerId) => {
         : i18n.t("settings.deleteProviderFailed"),
     };
   } catch (error) {
-    console.error("删除提供商失败:", error);
+  console.error("Failed to delete provider:", error);
     return { success: false, message: error.message };
   }
 };
 
 /**
- * 获取提供商的所有模型
- * @param {string} providerId 提供商ID
- * @returns {Array} 模型列表
+ * Get all models of a provider
+ * @param {string} providerId Provider ID
+ * @returns {Array} Model list
  */
 export const getProviderModels = (providerId) => {
   const provider = getProviderById(providerId);
@@ -268,11 +268,11 @@ export const getProviderModels = (providerId) => {
 };
 
 /**
- * 启用或禁用模型
- * @param {string} providerId 提供商ID
- * @param {string} modelId 模型ID
- * @param {boolean} enabled 是否启用
- * @returns {Object} 更新结果
+ * Enable or disable model
+ * @param {string} providerId Provider ID
+ * @param {string} modelId Model ID
+ * @param {boolean} enabled Whether enabled
+ * @returns {Object} Update result
  */
 export const enableModel = (providerId, modelId, enabled) => {
   try {
@@ -286,18 +286,18 @@ export const enableModel = (providerId, modelId, enabled) => {
       };
     }
 
-    // 确保存在models数组
+    // Ensure models array exists
     if (!providerConfig.models) {
       providerConfig.models = [];
     }
 
-    // 查找并更新模型
+    // Find and update model
     let modelConfig = providerConfig.models.find((m) => m.id === modelId);
 
     if (modelConfig) {
       modelConfig.enabled = enabled;
     } else {
-      // 如果模型不存在，添加它
+      // If model doesn't exist, add it
       const provider = getProviderById(providerId);
       const model = provider
         ? provider.models.find((m) => m.id === modelId)
@@ -310,7 +310,7 @@ export const enableModel = (providerId, modelId, enabled) => {
       });
     }
 
-    // 保存配置
+    // Save configuration
     const success = saveProviderConfig(providersConfig);
 
     return {
@@ -324,16 +324,16 @@ export const enableModel = (providerId, modelId, enabled) => {
         : i18n.t("settings.updateModelFailed"),
     };
   } catch (error) {
-    console.error("启用/禁用模型失败:", error);
+    console.error("Failed to enable/disable model:", error);
     return { success: false, message: error.message };
   }
 };
 
 /**
- * 添加模型到提供商
- * @param {string} providerId 提供商ID
- * @param {Object} modelData 模型数据
- * @returns {Object} 添加结果
+ * Add model to provider
+ * @param {string} providerId Provider ID
+ * @param {Object} modelData Model data
+ * @returns {Object} Add result
  */
 export const addModel = (providerId, modelData) => {
   try {
@@ -354,12 +354,12 @@ export const addModel = (providerId, modelData) => {
       };
     }
 
-    // 确保存在models数组
+    // Ensure models array exists
     if (!providerConfig.models) {
       providerConfig.models = [];
     }
 
-    // 检查模型ID是否已存在
+    // Check if model ID already exists
     if (providerConfig.models.some((m) => m.id === modelData.id)) {
       return {
         success: false,
@@ -367,7 +367,7 @@ export const addModel = (providerId, modelData) => {
       };
     }
 
-    // 添加新模型
+    // Add new model
     const newModel = {
       id: modelData.id,
       name: modelData.name || modelData.id,
@@ -376,7 +376,7 @@ export const addModel = (providerId, modelData) => {
 
     providerConfig.models.push(newModel);
 
-    // 保存配置
+    // Save configuration
     const success = saveProviderConfig(providersConfig);
 
     return {
@@ -387,17 +387,17 @@ export const addModel = (providerId, modelData) => {
         : i18n.t("settings.addModelFailed"),
     };
   } catch (error) {
-    console.error("添加模型失败:", error);
+    console.error("Failed to add model:", error);
     return { success: false, message: error.message };
   }
 };
 
 /**
- * 编辑模型
- * @param {string} providerId 提供商ID
- * @param {string} modelId 模型ID
- * @param {Object} modelData 模型更新数据
- * @returns {Object} 更新结果
+ * Edit model
+ * @param {string} providerId Provider ID
+ * @param {string} modelId Model ID
+ * @param {Object} modelData Model update data
+ * @returns {Object} Update result
  */
 export const editModel = (providerId, modelId, modelData) => {
   try {
@@ -411,7 +411,7 @@ export const editModel = (providerId, modelId, modelData) => {
       };
     }
 
-    // 查找并更新模型
+    // Find and update model
     const modelIndex = providerConfig.models.findIndex((m) => m.id === modelId);
 
     if (modelIndex === -1) {
@@ -421,14 +421,14 @@ export const editModel = (providerId, modelId, modelData) => {
       };
     }
 
-    // 创建更新后的模型对象
+    // Create updated model object
     const updatedModel = {
       ...providerConfig.models[modelIndex],
       ...modelData,
-      id: modelData.id || modelId, // 确保ID存在
+      id: modelData.id || modelId, // Ensure ID exists
     };
 
-    // 如果ID已更改，需要检查新ID是否已存在
+    // If ID has changed, need to check if new ID already exists
     if (modelData.id && modelData.id !== modelId) {
       const existingModel = providerConfig.models.find(
         (m) => m.id === modelData.id
@@ -440,17 +440,17 @@ export const editModel = (providerId, modelId, modelData) => {
         };
       }
 
-      // 删除旧ID的模型
+      // Delete old ID model
       providerConfig.models.splice(modelIndex, 1);
 
-      // 添加新模型
+      // Add new model
       providerConfig.models.push(updatedModel);
     } else {
-      // 直接更新模型
+      // Update model directly
       providerConfig.models[modelIndex] = updatedModel;
     }
 
-    // 保存配置
+    // Save configuration
     const success = saveProviderConfig(providersConfig);
 
     return {
@@ -461,16 +461,16 @@ export const editModel = (providerId, modelId, modelData) => {
         : i18n.t("settings.editModelFailed"),
     };
   } catch (error) {
-    console.error("编辑模型失败:", error);
+    console.error("Failed to edit model:", error);
     return { success: false, message: error.message };
   }
 };
 
 /**
- * 删除模型
- * @param {string} providerId 提供商ID
- * @param {string} modelId 模型ID
- * @returns {Object} 删除结果
+ * Delete model
+ * @param {string} providerId Provider ID
+ * @param {string} modelId Model ID
+ * @returns {Object} Delete result
  */
 export const deleteModel = (providerId, modelId) => {
   try {
@@ -484,7 +484,7 @@ export const deleteModel = (providerId, modelId) => {
       };
     }
 
-    // 查找模型
+    // Find model
     const modelIndex = providerConfig.models.findIndex((m) => m.id === modelId);
 
     if (modelIndex === -1) {
@@ -494,19 +494,19 @@ export const deleteModel = (providerId, modelId) => {
       };
     }
 
-    // 检查是否是系统提供商
+    // Check if it's a system provider
     const provider = getProviderById(providerId);
     const isSystemProvider = provider && !provider.isCustom;
 
     if (isSystemProvider) {
-      // 对于系统提供商，标记模型为已删除而不是移除
+      // For system providers, mark model as deleted instead of removing
       providerConfig.models[modelIndex].deleted = true;
     } else {
-      // 对于自定义提供商，直接移除模型
+      // For custom providers, remove model directly
       providerConfig.models.splice(modelIndex, 1);
     }
 
-    // 保存配置
+    // Save configuration
     const success = saveProviderConfig(providersConfig);
 
     return {
@@ -516,66 +516,66 @@ export const deleteModel = (providerId, modelId) => {
         : i18n.t("settings.deleteModelFailed"),
     };
   } catch (error) {
-    console.error("删除模型失败:", error);
+    console.error("Failed to delete model:", error);
     return { success: false, message: error.message };
   }
 };
 
-// 初始化系统提供商配置
+// Initialize system provider configuration
 export const initializeProviders = () => {
   if (typeof window !== "undefined") {
-    // 获取当前保存的提供商配置
+    // Get currently saved provider configuration
     const savedConfig = getProvidersConfig();
     let needsUpdate = false;
 
-    // 检查每个系统提供商是否已经在配置中
+    // Check if each system provider is already in configuration
     systemProviders.forEach((provider) => {
       if (!savedConfig[provider.id]) {
-        // 如果系统提供商不在配置中，添加它
+        // If system provider is not in configuration, add it
         savedConfig[provider.id] = {
           ...provider,
-          enabled: false, // 默认禁用
+          enabled: false, // Default disabled
           models: provider.models.map((model) => ({
             ...model,
-            enabled: true, // 默认启用所有模型
+            enabled: true, // Default enable all models
           })),
         };
         needsUpdate = true;
       } else {
-        // 如果系统提供商已经在配置中，检查是否有新的模型需要添加
+        // If system provider is already in configuration, check if there are new models to add
         const savedModels = savedConfig[provider.id].models || [];
         const savedModelIds = savedModels.map((m) => m.id);
 
         provider.models.forEach((model) => {
           if (!savedModelIds.includes(model.id)) {
-            // 如果模型不在配置中，添加它
+            // If model is not in configuration, add it
             savedModels.push({
               ...model,
-              enabled: true, // 默认启用
+              enabled: true, // Enable by default
             });
             needsUpdate = true;
           }
         });
 
-        // 更新模型列表
+        // Update model list
         savedConfig[provider.id].models = savedModels;
       }
     });
 
-    // 如果有更新，保存配置
+    // If there are updates, save configuration
     if (needsUpdate) {
       saveProviderConfig(savedConfig);
-      console.log("已初始化系统提供商配置");
+      console.log("Initialized system provider configuration");
     }
   }
 };
 
-// 初始化提供商配置
+// Initialize provider configuration
 initializeProviders();
 
-// 导出统一的服务对象
+// Export unified service object
 export const providerService = {
-  // 提供商操作
+  // Provider operations
   getAllProviders,
   getEnabledProviders,
   getProviderById,
@@ -584,14 +584,14 @@ export const providerService = {
   addCustomProvider,
   deleteProvider,
 
-  // 模型操作
+  // Model operations
   getProviderModels,
   enableModel,
   addModel,
   editModel,
   deleteModel,
 
-  // 配置管理
+  // Configuration management
   getProvidersConfig,
   saveProviderConfig,
 };

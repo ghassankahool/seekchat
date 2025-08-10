@@ -27,7 +27,7 @@ import {
 import "../styles/SessionList.css";
 import { useTranslation } from "react-i18next";
 
-// 使用preload.js中暴露的API
+// Use API exposed in preload.js
 const electronAPI = window.electronAPI;
 
 const SessionList = ({
@@ -43,12 +43,12 @@ const SessionList = ({
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [editingSession, setEditingSession] = useState(null);
 
-  // 过滤会话列表
+  // Filter session list
   const filteredSessions = sessions.filter((session) =>
     session.name.toLowerCase().includes(searchText.toLowerCase())
   );
 
-  // 确认删除
+  // Confirm deletion
   const confirmDelete = (sessionId, sessionName) => {
     Modal.confirm({
       title: t("chat.clearChatConfirm", { sessionName }),
@@ -64,39 +64,39 @@ const SessionList = ({
     });
   };
 
-  // 删除会话
+  // Delete session
   const handleDeleteSession = async (sessionId) => {
     try {
       await electronAPI.deleteSession(sessionId);
-      // 删除会话后，删除对应的messages
+      // After deleting session, delete corresponding messages
       await electronAPI.deleteMessages(sessionId);
 
-      // 刷新会话列表
+      // Refresh session list
       const sessionList = await electronAPI.getSessions();
       if (typeof onSessionListUpdate === "function") {
         onSessionListUpdate(sessionList);
       }
 
-      // 通知父组件
+      // Notify parent component
       if (typeof onDeleteSession === "function") {
         onDeleteSession(sessionId);
       }
 
       message.success(t("chat.deleteChat") + t("common.success"));
     } catch (error) {
-      console.error("删除会话失败:", error);
+      console.error("Failed to delete session:", error);
       message.error(t("chat.deleteChat") + t("common.failed"));
     }
   };
 
-  // 打开编辑名称模态框
+  // Open rename modal
   const showRenameModal = (session) => {
     setEditingSession(session);
     setSessionName(session.name);
     setIsModalVisible(true);
   };
 
-  // 保存会话名称
+  // Save session name
   const handleRenameSession = async () => {
     if (!editingSession || !sessionName.trim()) return;
 
@@ -106,15 +106,15 @@ const SessionList = ({
         sessionName.trim()
       );
 
-      // 直接重新加载所有会话，确保列表更新
+      // Directly reload all sessions to ensure list update
       const sessionList = await electronAPI.getSessions();
 
-      // 更新会话列表
+      // Update session list
       if (typeof onSessionListUpdate === "function") {
         onSessionListUpdate(sessionList);
       }
 
-      // 通知父组件更新当前会话（如果重命名的是当前会话）
+      // Notify parent component to update current session (if renaming current session)
       if (
         typeof onSelectSession === "function" &&
         currentSession &&
@@ -132,12 +132,12 @@ const SessionList = ({
       setIsModalVisible(false);
       setEditingSession(null);
     } catch (error) {
-      console.error("重命名会话失败:", error);
+      console.error("Failed to rename session:", error);
       message.error(t("chat.renameChat") + t("common.failed"));
     }
   };
 
-  // 渲染会话项的更多操作菜单
+  // Render session item more actions menu
   const getSessionMenu = (session) => (
     <Menu>
       <Menu.Item
@@ -221,7 +221,7 @@ const SessionList = ({
         )}
       </div>
 
-      {/* 重命名会话模态框 */}
+      {/* Rename session modal */}
       <Modal
         title={t("chat.renameChat")}
         open={isModalVisible}

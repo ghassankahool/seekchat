@@ -1,14 +1,14 @@
 /**
- * AI 模型配置文件
- * 包含各种AI服务提供商的模型信息
+ * AI model configuration file
+ * Contains model information for various AI service providers
  */
 
-// 添加i18next导入
+// Add i18next import
 import { v4 as uuidv4 } from "uuid";
 import i18n from "../i18n";
 import { getProvidersConfig } from "../hooks/useUserConfig";
 
-// 模型分类正则表达式
+// Model classification regex
 const VISION_REGEX =
   /\b(llava|moondream|minicpm|gemini-1\.5|gemini-2\.0|gemini-exp|claude-3|vision|glm-4v|qwen-vl|qwen2-vl|qwen2.5-vl|internvl2|grok-vision-beta|pixtral|gpt-4(?:-[\w-]+)|gpt-4o(?:-[\w-]+)?|chatgpt-4o(?:-[\w-]+)?|o1(?:-[\w-]+)?|deepseek-vl(?:[\w-]+)?|kimi-latest)\b/i;
 
@@ -19,7 +19,7 @@ const REASONING_REGEX =
 const EMBEDDING_REGEX =
   /(?:^text-|embed|bge-|e5-|LLM2Vec|retrieval|uae-|gte-|jina-clip|jina-embeddings)/i;
 
-// 系统模型定义
+// System model definitions
 export const SYSTEM_MODELS = {
   silicon: [
     {
@@ -140,7 +140,7 @@ export const SYSTEM_MODELS = {
   ],
 };
 
-// 服务提供商定义
+// Provider definitions
 export const providers = [
   {
     id: "deepseek",
@@ -186,7 +186,7 @@ export const providers = [
   },
   {
     id: "dashscope",
-    name: "阿里云百炼",
+  name: "Aliyun Bailian",
     logo: "assets/providers/dashscope.png",
     baseUrl: "https://dashscope.aliyuncs.com/compatible-mode/v1",
     models: SYSTEM_MODELS.dashscope || [],
@@ -201,9 +201,9 @@ export const providers = [
 ];
 
 /**
- * 判断模型是否为推理模型
- * @param {Object} model 模型对象
- * @returns {boolean} 是否为推理模型
+ * Determine if the model is a reasoning model
+ * @param {Object} model Model object
+ * @returns {boolean} Whether it is a reasoning model
  */
 export function isReasoningModel(model) {
   if (!model) {
@@ -221,15 +221,15 @@ export function isReasoningModel(model) {
 }
 
 /**
- * 获取当前配置对应的模型名称
- * @param {string} providerId 提供商ID
- * @param {string} modelId 模型ID
- * @param {boolean} useAllProviders 是否使用所有提供商（包括自定义提供商）
- * @returns {string} 模型名称
+ * Get the model name for the current config
+ * @param {string} providerId Provider ID
+ * @param {string} modelId Model ID
+ * @param {boolean} useAllProviders Whether to use all providers (including custom providers)
+ * @returns {string} Model name
  */
 export function getModelName(providerId, modelId) {
-  // 如果 useAllProviders 为 true，则使用 getAllProviders 获取所有提供商
-  // 否则只使用系统提供商
+  // If useAllProviders is true, use getAllProviders to get all providers
+  // Otherwise, use only system providers
   const providerList = getAllProviders();
   const provider = providerList.find((p) => p.id === providerId);
 
@@ -240,9 +240,9 @@ export function getModelName(providerId, modelId) {
 }
 
 /**
- * 获取指定提供商的所有模型
- * @param {string} providerId 提供商ID
- * @returns {Array} 模型列表
+ * Get all models for the specified provider
+ * @param {string} providerId Provider ID
+ * @returns {Array} Model list
  */
 export function getProviderModels(providerId) {
   const allProviders = getAllProviders();
@@ -251,43 +251,43 @@ export function getProviderModels(providerId) {
 }
 
 /**
- * 获取所有提供商（包括系统和自定义提供商）
- * @returns {Array} 所有提供商列表
+ * Get all providers (including system and custom providers)
+ * @returns {Array} List of all providers
  */
 export const getAllProviders = () => {
-  // 获取保存的提供商配置
+  // Get saved provider configs
   const savedProviderConfigs = getProvidersConfig();
 
-  // 创建系统提供商的副本
+  // Create a copy of system providers
   const allProviders = JSON.parse(JSON.stringify(providers));
 
-  // 更新系统提供商的配置
+  // Update system provider configs
   allProviders.forEach((provider) => {
     const savedConfig = savedProviderConfigs[provider.id];
     if (savedConfig) {
-      // 如果有保存的配置，则使用保存的配置
+  // Use saved config if available
       provider.apiKey = savedConfig.apiKey || "";
       provider.baseUrl = savedConfig.baseUrl || "";
       provider.enabled =
         savedConfig.enabled !== undefined ? savedConfig.enabled : false;
 
-      // 更新模型的启用状态和删除状态
+  // Update model enabled and deleted status
       if (savedConfig.models) {
         provider.models.forEach((model) => {
           const savedModel = savedConfig.models.find((m) => m.id === model.id);
           if (savedModel) {
             model.enabled =
               savedModel.enabled !== undefined ? savedModel.enabled : true;
-            // 添加删除标志支持
+            // Add support for deleted flag
             model.deleted = savedModel.deleted === true;
           } else {
-            // 如果没有保存的模型配置，默认启用且未删除
+            // If no saved model config, default to enabled and not deleted
             model.enabled = true;
             model.deleted = false;
           }
         });
 
-        // 添加保存的模型中在系统模型中不存在的模型（可能是后来添加的）
+  // Add models from saved config that do not exist in system models (possibly added later)
         savedConfig.models.forEach((savedModel) => {
           const existingModel = provider.models.find(
             (m) => m.id === savedModel.id
@@ -303,14 +303,14 @@ export const getAllProviders = () => {
           }
         });
       } else {
-        // 如果没有保存的模型配置，默认所有模型都启用且未删除
+  // If no saved model config, all models are enabled and not deleted by default
         provider.models.forEach((model) => {
           model.enabled = true;
           model.deleted = false;
         });
       }
     } else {
-      // 如果没有保存的配置，默认禁用提供商，但所有模型都启用且未删除
+  // If no saved config, provider is disabled by default, but all models are enabled and not deleted
       provider.enabled = false;
       provider.models.forEach((model) => {
         model.enabled = true;
@@ -319,7 +319,7 @@ export const getAllProviders = () => {
     }
   });
 
-  // 添加自定义提供商
+  // Add custom providers
   Object.keys(savedProviderConfigs).forEach((providerId) => {
     const providerConfig = savedProviderConfigs[providerId];
     if (providerConfig.isCustom) {
@@ -340,7 +340,7 @@ export const getAllProviders = () => {
     }
   });
 
-  // 从结果中过滤掉标记为已删除的模型
+  // Filter out models marked as deleted from the result
   allProviders.forEach((provider) => {
     provider.models = provider.models.filter((model) => !model.deleted);
   });
@@ -348,51 +348,51 @@ export const getAllProviders = () => {
   return allProviders;
 };
 
-// 初始化系统提供商配置
-// 这段代码会在应用启动时执行，确保系统提供商被正确保存到配置中
+// Initialize system provider config
+// This code runs at app startup to ensure system providers are correctly saved to config
 if (typeof window !== "undefined") {
-  // 获取当前保存的提供商配置
+  // Get current saved provider config
   const savedConfig = getProvidersConfig();
   let needsUpdate = false;
 
-  // 检查每个系统提供商是否已经在配置中
+  // Check if each system provider is already in config
   providers.forEach((provider) => {
     if (!savedConfig[provider.id]) {
-      // 如果系统提供商不在配置中，添加它
+  // If system provider is not in config, add it
       savedConfig[provider.id] = {
         ...provider,
-        enabled: false, // 默认禁用
+        enabled: false, // Disabled by default
         models: provider.models.map((model) => ({
           ...model,
-          enabled: true, // 默认启用所有模型
+          enabled: true, // Enable all models by default
         })),
       };
       needsUpdate = true;
     } else {
-      // 如果系统提供商已经在配置中，检查是否有新的模型需要添加
+  // If system provider is already in config, check if new models need to be added
       const savedModels = savedConfig[provider.id].models || [];
       const savedModelIds = savedModels.map((m) => m.id);
 
       provider.models.forEach((model) => {
         if (!savedModelIds.includes(model.id)) {
-          // 如果模型不在配置中，添加它
+          // If model is not in config, add it
           savedModels.push({
             ...model,
-            enabled: true, // 默认启用
+            enabled: true, // Enable by default
           });
           needsUpdate = true;
         }
       });
 
-      // 更新模型列表
+  // Update model list
       savedConfig[provider.id].models = savedModels;
     }
   });
 
-  // 如果有更新，保存配置
+  // Save config if there are updates
   if (needsUpdate) {
     const configJson = JSON.stringify(savedConfig);
     localStorage.setItem("providersConfig", configJson);
-    console.log("已初始化系统提供商配置");
+  console.log("System provider config initialized");
   }
 }
